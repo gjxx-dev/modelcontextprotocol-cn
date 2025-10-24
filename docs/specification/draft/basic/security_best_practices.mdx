@@ -1,53 +1,49 @@
 ---
-title: Security Best Practices
+title: 安全最佳实践
 ---
 
 <div id="enable-section-numbers" />
 
-## Introduction
+## 概述
 
-### Purpose and Scope
+### 目的和范围
 
-This document provides security considerations for the Model Context Protocol (MCP), complementing the [MCP Authorization](../basic/authorization.mdx) specification. This document identifies security risks, attack vectors, and best practices specific to MCP implementations.
+本文档为Model Context Protocol (MCP)提供安全考虑，补充[MCP授权](../basic/authorization.mdx)规范。本文档识别了特定于MCP实现的安全风险、攻击向量和最佳实践。
 
-The primary audience for this document includes developers implementing MCP authorization flows, MCP server operators, and security professionals evaluating MCP-based systems. This document should be read alongside the MCP Authorization specification and [OAuth 2.0 security best practices](https://datatracker.ietf.org/doc/html/rfc9700).
+本文档的主要受众包括实施MCP授权流程的开发者、MCP服务器操作员和评估基于MCP的系统的安全专业人员。本文档应与MCP授权规范和[OAuth 2.0安全最佳实践](https://datatracker.ietf.org/doc/html/rfc9700)一起阅读。
 
-## Attacks and Mitigations
+## 攻击和缓解措施
 
-This section gives a detailed description of attacks on MCP implementations, along with potential countermeasures.
+本部分详细描述了对MCP实现的攻击，以及潜在的应对措施。
 
-### Confused Deputy Problem
+### 混淆代理问题
 
-Attackers can exploit MCP proxy servers that connect to third-party APIs, creating "[confused deputy](https://en.wikipedia.org/wiki/Confused_deputy_problem)" vulnerabilities. This attack allows malicious clients to obtain authorization codes without proper user consent by exploiting the combination of static client IDs, dynamic client registration, and consent cookies.
+攻击者可以利用连接到第三方API的MCP代理服务器，创建"[混淆代理](https://en.wikipedia.org/wiki/Confused_deputy_problem)"漏洞。这种攻击允许恶意客户端通过利用静态客户端ID、动态客户端注册和同意cookie的组合来获得授权码而无需适当的用户同意。
 
-#### Terminology
+#### 术语
 
-**MCP Proxy Server**
-: An MCP server that connects MCP clients to third-party APIs, offering MCP features while delegating operations and acting as a single OAuth client to the third-party API server.
+**MCP代理服务器**
+: 一个连接MCP客户端到第三方API的MCP服务器，提供MCP功能同时委托操作，并充当到第三方API服务器的单个OAuth客户端。
 
-**Third-Party Authorization Server**
-: Authorization server that protects the third-party API. It may lack dynamic client registration support, requiring the MCP proxy to use a static client ID for all requests.
+**第三方授权服务器**
+: 保护第三方API的授权服务器。它可能缺乏动态客户端注册支持，要求MCP代理使用静态客户端ID进行所有请求。
 
-**Third-Party API**
-: The protected resource server that provides the actual API functionality. Access to this
-API requires tokens issued by the third-party authorization server.
+**第三方API**
+: 提供实际API功能的受保护资源服务器。访问此API需要第三方授权服务器发行的令牌。
 
-**Static Client ID**
-: A fixed OAuth 2.0 client identifier used by the MCP proxy server when communicating with
-the third-party authorization server. This Client ID refers to the MCP server acting as a client
-to the Third-Party API. It is the same value for all MCP server to Third-Party API interactions regardless of
-which MCP client initiated the request.
+**静态客户端ID**
+: MCP代理服务器与第三方授权服务器通信时使用的固定OAuth 2.0客户端标识符。此客户端ID指的是MCP服务器充当第三方API的客户端。它对于所有MCP服务器到第三方API的交互都是相同的值，无论哪个MCP客户端发起请求。
 
-#### Vulnerable Conditions
+#### 易受攻击的条件
 
-This attack becomes possible when all of the following conditions are present:
+当所有以下条件都存在时，这种攻击成为可能：
 
-- MCP proxy server uses a **static client ID** with a third-party authorization server
-- MCP proxy server allows MCP clients to **dynamically register** (each getting their own client_id)
-- The third-party authorization server sets a **consent cookie** after the first authorization
-- MCP proxy server does not implement proper per-client consent before forwarding to third-party authorization
+- MCP代理服务器使用**静态客户端ID**与第三方授权服务器
+- MCP代理服务器允许MCP客户端**动态注册**（每个客户端获得自己的client_id）
+- 第三方授权服务器在第一次授权后设置**同意cookie**
+- MCP代理服务器在转发到第三方授权之前没有实施适当的每客户端同意
 
-#### Architecture and Attack Flows
+#### 架构和攻击流程
 
 ##### Normal OAuth proxy usage (preserves user consent)
 
@@ -102,31 +98,29 @@ sequenceDiagram
    M->>UA: Redirect to attacker.com with MCP Authorization code
    UA->>A: MCP Authorization code delivered to attacker.com
    Note over M,A: Attacker exchanges MCP code for MCP token
-   A->>M: Attacker impersonates user to MCP server
+   A->>M: 攻击者冒充用户访问MCP服务器
 ```
 
-#### Attack Description
+#### 攻击描述
 
-When an MCP proxy server uses a static client ID to authenticate with a third-party
-authorization server, the following attack becomes possible:
+当MCP代理服务器使用静态客户端ID与第三方授权服务器进行身份验证时，以下攻击成为可能：
 
-1. A user authenticates normally through the MCP proxy server to access the third-party API
-2. During this flow, the third-party authorization server sets a cookie on the user agent
-   indicating consent for the static client ID
-3. An attacker later sends the user a malicious link containing a crafted authorization request which contains a malicious redirect URI along with a new dynamically registered client ID
-4. When the user clicks the link, their browser still has the consent cookie from the previous legitimate request
-5. The third-party authorization server detects the cookie and skips the consent screen
-6. The MCP authorization code is redirected to the attacker's server (specified in the malicious `redirect_uri` parameter during [dynamic client registration](/specification/draft/basic/authorization#dynamic-client-registration))
-7. The attacker exchanges the stolen authorization code for access tokens for the MCP server without the user's explicit approval
-8. The attacker now has access to the third-party API as the compromised user
+1. 用户正常通过MCP代理服务器进行身份验证以访问第三方API
+2. 在此流程中，第三方授权服务器在用户代理上设置一个cookie，表示对静态客户端ID的同意
+3. 攻击者后来向用户发送一个恶意链接，其中包含一个精心设计的授权请求，该请求包含恶意重定向URI以及新的动态注册客户端ID
+4. 当用户点击链接时，他们的浏览器仍然有来自先前合法请求的同意cookie
+5. 第三方授权服务器检测到cookie并跳过同意屏幕
+6. MCP授权码被重定向到攻击者的服务器（在[动态客户端注册](/specification/draft/basic/authorization#dynamic-client-registration)期间在恶意`redirect_uri`参数中指定）
+7. 攻击者将窃取的授权码兑换为MCP服务器的访问令牌而无需用户的明确批准
+8. 攻击者现在可以作为受损用户访问第三方API
 
-#### Mitigation
+#### 缓解措施
 
-To prevent confused deputy attacks, MCP proxy servers **MUST** implement per-client consent and proper security controls as detailed below.
+为了防止混淆代理攻击，MCP代理服务器**必须**实施每客户端同意和适当的安全控制，如下所述。
 
-##### Consent Flow Implementation
+##### 同意流程实施
 
-The following diagram shows how to properly implement per-client consent that runs **before** the third-party authorization flow:
+以下图表显示了如何正确实施在第三方授权流程**之前**运行的每客户端同意：
 
 ```mermaid
 sequenceDiagram
@@ -166,88 +160,88 @@ sequenceDiagram
     MCP->>Browser: Redirect to client's registered redirect_uri
 ```
 
-##### Required Protections
+##### 必需的保护措施
 
-**Per-Client Consent Storage**
+**每客户端同意存储**
 
-MCP proxy servers **MUST**:
+MCP代理服务器**必须**：
 
-- Maintain a registry of approved `client_id` values per user
-- Check this registry **before** initiating the third-party authorization flow
-- Store consent decisions securely (server-side database, or server specific cookies)
+- 维护每个用户的已批准`client_id`值注册表
+- 在启动第三方授权流程**之前**检查此注册表
+- 安全地存储同意决定（服务器端数据库，或服务器特定cookie）
 
-**Consent UI Requirements**
+**同意UI要求**
 
-The MCP-level consent page **MUST**:
+MCP级别的同意页面**必须**：
 
-- Clearly identify the requesting MCP client by name
-- Display the specific third-party API scopes being requested
-- Show the registered `redirect_uri` where tokens will be sent
-- Implement CSRF protection (e.g., state parameter, CSRF tokens)
-- Prevent iframing via `frame-ancestors` CSP directive or `X-Frame-Options: DENY` to prevent clickjacking
+- 通过名称清楚地识别请求的MCP客户端
+- 显示正在请求的特定第三方API范围
+- 显示将发送令牌的注册`redirect_uri`
+- 实施CSRF保护（例如，状态参数、CSRF令牌）
+- 通过`frame-ancestors` CSP指令或`X-Frame-Options: DENY`防止iframe嵌入以防止点击劫持
 
-**Consent Cookie Security**
+**同意Cookie安全**
 
-If using cookies to track consent decisions, they **MUST**:
+如果使用cookie跟踪同意决定，它们**必须**：
 
-- Use `__Host-` prefix for cookie names
-- Set `Secure`, `HttpOnly`, and `SameSite=Lax` attributes
-- Be cryptographically signed or use server-side sessions
-- Bind to the specific `client_id` (not just "user has consented")
+- 对cookie名称使用`__Host-`前缀
+- 设置`Secure`、`HttpOnly`和`SameSite=Lax`属性
+- 进行加密签名或使用服务器端会话
+- 绑定到特定的`client_id`（不仅仅是"用户已同意"）
 
-**Redirect URI Validation**
+**重定向URI验证**
 
-The MCP proxy server **MUST**:
+MCP代理服务器**必须**：
 
-- Validate that the `redirect_uri` in authorization requests exactly matches the registered URI
-- Reject requests if the `redirect_uri` has changed without re-registration
-- Use exact string matching (not pattern matching or wildcards)
+- 验证授权请求中的`redirect_uri`与注册的URI完全匹配
+- 如果`redirect_uri`在没有重新注册的情况下发生变化，则拒绝请求
+- 使用确切的字符串匹配（不是模式匹配或通配符）
 
 **OAuth State Parameter Validation**
 
-The OAuth `state` parameter is critical to prevent authorization code interception and CSRF attacks. Proper state validation ensures that consent approval at the authorization endpoint is enforced at the callback endpoint.
+OAuth `state`参数对于防止授权码拦截和CSRF攻击至关重要。适当的状态验证确保在授权端点的同意批准在回调端点得到强制执行。
 
-MCP proxy servers implementing OAuth flows **MUST**:
+实施OAuth流程的MCP代理服务器**必须**：
 
-- Generate a cryptographically secure random `state` value for each authorization request
-- Store the `state` value server-side (in a secure session store or encrypted cookie) **only after** consent has been explicitly approved
-- Set the `state` tracking cookie/session **immediately before** redirecting to the third-party identity provider (not before consent approval)
-- Validate at the callback endpoint that the `state` query parameter exactly matches the stored value in the callback request's cookies or in the request's cookie-based session
-- Reject any callback requests where the `state` parameter is missing or does not match
-- Ensure `state` values are single-use (delete after validation) and have a short expiration time (e.g., 10 minutes)
+- 为每个授权请求生成加密安全的随机`state`值
+- 在同意被明确批准**之后**，仅在服务器端存储`state`值（在安全的会话存储或加密cookie中）
+- 在重定向到第三方身份提供商**之前**立即设置`state`跟踪cookie/会话（不是在同意批准之前）
+- 在回调端点验证`state`查询参数与回调请求cookie或请求的基于cookie的会话中存储的值完全匹配
+- 拒绝任何缺少`state`参数或不匹配的回调请求
+- 确保`state`值是一次性的（验证后删除）并具有短暂的过期时间（例如，10分钟）
 
-The consent cookie or session containing the `state` value **MUST NOT** be set until **after** the user has approved the consent screen at the MCP server's authorization endpoint. Setting this cookie before consent approval renders the consent screen ineffective, as an attacker could bypass it by crafting a malicious authorization request.
+包含`state`值的同意cookie或会话**不得**在用户在MCP服务器的授权端点批准同意屏幕**之后**设置。在同意批准之前设置此cookie会使同意屏幕无效，因为攻击者可以通过制作恶意授权请求来绕过它。
 
-### Token Passthrough
+### 令牌传递
 
-"Token passthrough" is an anti-pattern where an MCP server accepts tokens from an MCP client without validating that the tokens were properly issued _to the MCP server_ and passes them through to the downstream API.
+"令牌传递"是一种反模式，其中MCP服务器接受来自MCP客户端的令牌，而不验证令牌是否正确发行_给MCP服务器_，并将它们传递给下游API。
 
-#### Risks
+#### 风险
 
-Token passthrough is explicitly forbidden in the [authorization specification](/specification/draft/basic/authorization) as it introduces a number of security risks, that include:
+令牌传递在[授权规范](/specification/draft/basic/authorization)中被明确禁止，因为它引入了许多安全风险，包括：
 
-- **Security Control Circumvention**
-  - The MCP Server or downstream APIs might implement important security controls like rate limiting, request validation, or traffic monitoring, that depend on the token audience or other credential constraints. If clients can obtain and use tokens directly with the downstream APIs without the MCP server validating them properly or ensuring that the tokens are issued for the right service, they bypass these controls.
-- **Accountability and Audit Trail Issues**
-  - The MCP Server will be unable to identify or distinguish between MCP Clients when clients are calling with an upstream-issued access token which may be opaque to the MCP Server.
-  - The downstream Resource Server’s logs may show requests that appear to come from a different source with a different identity, rather than the MCP server that is actually forwarding the tokens.
-  - Both factors make incident investigation, controls, and auditing more difficult.
-  - If the MCP Server passes tokens without validating their claims (e.g., roles, privileges, or audience) or other metadata, a malicious actor in possession of a stolen token can use the server as a proxy for data exfiltration.
-- **Trust Boundary Issues**
-  - The downstream Resource Server grants trust to specific entities. This trust might include assumptions about origin or client behavior patterns. Breaking this trust boundary could lead to unexpected issues.
-  - If the token is accepted by multiple services without proper validation, an attacker compromising one service can use the token to access other connected services.
-- **Future Compatibility Risk**
-  - Even if an MCP Server starts as a "pure proxy" today, it might need to add security controls later. Starting with proper token audience separation makes it easier to evolve the security model.
+- **安全控制规避**
+  - MCP服务器或下游API可能实施重要的安全控制，如速率限制、请求验证或流量监控，这些控制依赖于令牌受众或其他凭据约束。如果客户端可以获得令牌并直接与下游API一起使用，而MCP服务器没有正确验证它们或确保令牌是为正确的服务发行的，它们就会绕过这些控制。
+- **问责制和审计跟踪问题**
+  - 当客户端使用上游发行的访问令牌（可能对MCP服务器不透明）调用时，MCP服务器将无法识别或区分MCP客户端。
+  - 下游资源服务器的日志可能显示似乎来自不同来源的请求，具有不同的身份，而不是实际转发令牌的MCP服务器。
+  - 这两个因素使事件调查、控制和审计更加困难。
+  - 如果MCP服务器在不验证其声明（例如，角色、权限或受众）或其他元数据的情况下传递令牌，拥有被盗令牌的恶意行为者可以使用服务器作为数据泄露的代理。
+- **信任边界问题**
+  - 下游资源服务器授予对特定实体的信任。此信任可能包括关于来源或客户端行为模式的假设。打破此信任边界可能导致意外问题。
+  - 如果令牌被多个服务接受而没有适当验证， compromising一个服务的攻击者可以使用令牌访问其他连接的服务。
+- **未来兼容性风险**
+  - 即使MCP服务器今天从"纯代理"开始，它可能稍后需要添加安全控制。从适当的令牌受众分离开始可以更容易地发展安全模型。
 
-#### Mitigation
+#### 缓解措施
 
-MCP servers **MUST NOT** accept any tokens that were not explicitly issued for the MCP server.
+MCP服务器**不得**接受任何不是明确为MCP服务器发行的令牌。
 
-### Session Hijacking
+### 会话劫持
 
-Session hijacking is an attack vector where a client is provided a session ID by the server, and an unauthorized party is able to obtain and use that same session ID to impersonate the original client and perform unauthorized actions on their behalf.
+会话劫持是一种攻击向量，其中服务器向客户端提供会话ID，而未经授权的一方能够获得并使用相同的会话ID来冒充原始客户端并代表他们执行未经授权的操作。
 
-#### Session Hijack Prompt Injection
+#### 会话劫持提示注入
 
 ```mermaid
 sequenceDiagram
@@ -273,7 +267,7 @@ sequenceDiagram
     Client->>Client: Acts based on malicious payload
 ```
 
-#### Session Hijack Impersonation
+#### 会话劫持冒充
 
 ```mermaid
 sequenceDiagram
@@ -291,19 +285,19 @@ sequenceDiagram
     Server-->>Attacker: Respond as if Attacker is Client (session hijack)
 ```
 
-#### Attack Description
+#### 攻击描述
 
-When you have multiple stateful HTTP servers that handle MCP requests, the following attack vectors are possible:
+当您有多个有状态的HTTP服务器处理MCP请求时，以下攻击向量成为可能：
 
-**Session Hijack Prompt Injection**
+**会话劫持提示注入**
 
-1. The client connects to **Server A** and receives a session ID.
-1. The attacker obtains an existing session ID and sends a malicious event to **Server B** with said session ID.
-   - When a server supports [redelivery/resumable streams](/specification/draft/basic/transports#resumability-and-redelivery), deliberately terminating the request before receiving the response could lead to it being resumed by the original client via the GET request for server sent events.
-   - If a particular server initiates server sent events as a consequence of a tool call such as a `notifications/tools/list_changed`, where it is possible to affect the tools that are offered by the server, a client could end up with tools that they were not aware were enabled.
+1. 客户端连接到**服务器A**并接收会话ID。
+2. 攻击者获得现有会话ID并使用该会话ID向**服务器B**发送恶意事件。
+   - 当服务器支持[重新传递/可恢复流](/specification/draft/basic/transports#resumability-and-redelivery)时，在接收响应之前故意终止请求可能导致它通过服务器发送事件的GET请求被原始客户端恢复。
+   - 如果特定服务器作为工具调用的后果启动服务器发送事件，例如`notifications/tools/list_changed`，其中可能影响服务器提供的工具，则客户端可能最终获得他们不知道已启用的工具。
 
-1. **Server B** enqueues the event (associated with session ID) into a shared queue.
-1. **Server A** polls the queue for events using the session ID and retrieves the malicious payload.
+3. **服务器B**将事件（与会话ID关联）排入共享队列。
+4. **服务器A**使用会话ID轮询队列以获取事件并检索恶意负载。
 1. **Server A** sends the malicious payload to the client as an asynchronous or resumed response.
 1. The client receives and acts on the malicious payload, leading to potential compromise.
 

@@ -1,61 +1,61 @@
 ---
-title: Roadmap
-description: Our plans for evolving Model Context Protocol
+title: 路线图
+description: 我们对模型上下文协议演进的计划
 ---
 
-<Info>Last updated: **2025-07-22**</Info>
+<Info>最后更新：**2025-07-22**</Info>
 
-The Model Context Protocol is rapidly evolving. This page outlines our current thinking on key priorities and direction for approximately **the next six months**, though these may change significantly as the project develops. To see what's changed recently, check out the **[specification changelog](/specification/2025-06-18/changelog/)**.
+模型上下文协议正在快速发展。本页面概述了我们对大约**未来六个月**的关键优先事项和方向的当前思考，尽管随着项目的发展，这些可能会发生重大变化。要查看最近的变化，请查看**[规范变更日志](/specification/2025-06-18/changelog/)**。
 
 <Note>
 
-The ideas presented here are not commitments—we may solve these challenges differently than described, or some may not materialize at all. This is also not an _exhaustive_ list; we may incorporate work that isn't mentioned here.
+这里提出的想法不是承诺 — 我们可能以不同于描述的方式解决这些挑战，或者有些可能根本不会实现。这也不是一个_详尽_的列表；我们可能纳入这里未提及的工作。
 
 </Note>
 
-We value community participation! Each section links to relevant discussions where you can learn more and contribute your thoughts.
+我们重视社区参与！每个部分都链接到相关讨论，您可以在那里了解更多并贡献您的想法。
 
-For a technical view of our standardization process, visit the [Standards Track](https://github.com/orgs/modelcontextprotocol/projects/2/views/2) on GitHub, which tracks how proposals progress toward inclusion in the official [MCP specification](https://spec.modelcontextprotocol.io).
+有关我们标准化过程的技术视图，请访问 GitHub 上的[标准跟踪](https://github.com/orgs/modelcontextprotocol/projects/2/views/2)，它跟踪提案如何进展到包含在官方[MCP 规范](https://spec.modelcontextprotocol.io)中。
 
-## Agents
+## 代理
 
-As MCP increasingly becomes part of agentic workflows, we're focusing on key improvements:
+随着 MCP 越来越多地成为代理工作流程的一部分，我们专注于关键改进：
 
-- **Asynchronous Operations**: supporting long-running operations that may take extended periods, with resilient handling of disconnections and reconnections
+- **异步操作**：支持可能需要延长时间的长时间运行操作，具有对断开连接和重新连接的弹性处理
 
-## Authentication and Security
+## 认证和安全
 
-We're evolving our authorization and security resources to improve user safety and provide a better developer experience:
+我们正在演进我们的授权和安全资源，以改善用户安全并提供更好的开发者体验：
 
-- **Guides and Best Practices**: documenting specifics about deploying MCP securely in the form of guides and best practices to help developers avoid common pitfalls.
-- **Alternatives to Dynamic Client Registration (DCR)**: exploring alternatives to DCR, attempting to address operational challenges while preserving a smooth user experience.
-- **Fine-grained Authorization**: developing mechanisms and guidelines for primitive authorization for sensitive actions
-- **Enterprise Managed Authorization**: adding the capability for enterprises to simplify MCP server authorization with the help of Single Sign-On (SSO)
-- **Secure Authorization Elicitation**: enable developers to integrate secure authorization flows for downstream APIs outside the main MCP server authorization
+- **指南和最佳实践**：以指南和最佳实践的形式记录关于安全部署 MCP 的具体信息，帮助开发者避免常见陷阱。
+- **动态客户端注册 (DCR) 的替代方案**：探索 DCR 的替代方案，尝试在保持流畅用户体验的同时解决运营挑战。
+- **细粒度授权**：为敏感操作开发机制和指南
+- **企业管理授权**：为企业添加使用单点登录 (SSO) 帮助简化 MCP 服务器授权的能力
+- **安全授权引出**：使开发者能够为主 MCP 服务器授权之外的下游 API 集成安全授权流程
 
-## Validation
+## 验证
 
-To foster a robust developer ecosystem, we plan to invest in:
+为了培养强大的开发者生态系统，我们计划投资于：
 
-- **Reference Client Implementations**: demonstrating protocol features with high-quality AI applications
-- **Reference Server Implementation**: showcasing authentication patterns and remote deployment best practices
-- **Compliance Test Suites**: automated verification that clients, servers, and SDKs properly implement the specification
+- **参考客户端实现**：使用高质量 AI 应用程序演示协议功能
+- **参考服务器实现**：展示认证模式和远程部署最佳实践
+- **合规测试套件**：自动化验证客户端、服务器和 SDK 是否正确实现规范
 
-These tools will help developers confidently implement MCP while ensuring consistent behavior across the ecosystem.
+这些工具将帮助开发者自信地实现 MCP，同时确保生态系统中的一致行为。
 
-## Registry
+## 注册表
 
-For MCP to reach its full potential, we need streamlined ways to distribute and discover MCP servers.
+为了让 MCP 发挥其全部潜力，我们需要简化的方式来分发和发现 MCP 服务器。
 
-We plan to develop an [**MCP Registry**](https://github.com/orgs/modelcontextprotocol/discussions/159) that will enable centralized server discovery and metadata. This registry will primarily function as an API layer that third-party marketplaces and discovery services can build upon.
+我们计划开发一个[**MCP 注册表**](https://github.com/orgs/modelcontextprotocol/discussions/159)，它将启用集中式服务器发现和元数据。这个注册表将主要作为第三方市场和发现服务可以构建的 API 层。
 
-## Multimodality
+## 多模态
 
-Supporting the full spectrum of AI capabilities in MCP, including:
+在 MCP 中支持 AI 能力的完整范围，包括：
 
-- **Additional Modalities**: video and other media types
-- **[Streaming](https://github.com/modelcontextprotocol/specification/issues/117)**: multipart, chunked messages, and bidirectional communication for interactive experiences
+- **附加模态**：视频和其他媒体类型
+- **[流式传输](https://github.com/modelcontextprotocol/specification/issues/117)**：多部分、分块消息和双向通信，用于交互式体验
 
-## Get Involved
+## 参与其中
 
-We welcome your contributions to MCP's future! Join our [GitHub Discussions](https://github.com/orgs/modelcontextprotocol/discussions) to share ideas, provide feedback, or participate in the development process.
+我们欢迎您为 MCP 的未来做出贡献！加入我们的 [GitHub 讨论](https://github.com/orgs/modelcontextprotocol/discussions) 来分享想法、提供反馈或参与开发过程。

@@ -1,64 +1,64 @@
 ---
-title: "FAQs"
-description: "Explaining MCP and why it matters in simple terms"
+title: "常见问题"
+description: "用简单术语解释 MCP 及其重要性"
 ---
 
-## What is MCP?
+## 什么是 MCP？
 
-MCP (Model Context Protocol) is a standard way for AI applications and agents to connect to and work with your data sources (e.g. local files, databases, or content repositories) and tools (e.g. GitHub, Google Maps, or Puppeteer).
+MCP（模型上下文协议）是 AI 应用程序和代理连接和使用您的数据源（例如本地文件、数据库或内容仓库）和工具（例如 GitHub、Google Maps 或 Puppeteer）的标准方式。
 
-Think of MCP as a universal adapter for AI applications, similar to what USB-C is for physical devices. USB-C acts as a universal adapter to connect devices to various peripherals and accessories. Similarly, MCP provides a standardized way to connect AI applications to different data and tools.
+可以将 MCP 视为 AI 应用程序的通用适配器，类似于 USB-C 对物理设备的作用。USB-C 充当通用适配器，将设备连接到各种外围设备和配件。同样，MCP 提供了一种标准化的方式，将 AI 应用程序连接到不同的数据和工具。
 
-Before USB-C, you needed different cables for different connections. Similarly, before MCP, developers had to build custom connections to each data source or tool they wanted their AI application to work with—a time-consuming process that often resulted in limited functionality. Now, with MCP, developers can easily add connections to their AI applications, making their applications much more powerful from day one.
+在 USB-C 之前，您需要不同的电缆进行不同的连接。同样，在 MCP 之前，开发者必须为他们希望 AI 应用程序使用的每个数据源或工具构建自定义连接 — 这是一个耗时的过程，往往导致功能有限。现在，使用 MCP，开发者可以轻松地为其 AI 应用程序添加连接，使他们的应用程序从第一天起就更强大。
 
-## Why does MCP matter?
+## 为什么 MCP 重要？
 
-### For AI application users
+### 对于 AI 应用程序用户
 
-MCP means your AI applications can access the information and tools you work with every day, making them much more helpful. Rather than AI being limited to what it already knows about, it can now understand your specific documents, data, and work context.
+MCP 意味着您的 AI 应用程序可以访问您每天使用的信息和工具，使它们更有帮助。AI 不再局限于它已经知道的内容，现在可以理解您的特定文档、数据和工作上下文。
 
-For example, by using MCP servers, applications can access your personal documents from Google Drive or data about your codebase from GitHub, providing more personalized and contextually relevant assistance.
+例如，通过使用 MCP 服务器，应用程序可以从 Google Drive 访问您的个人文档，或从 GitHub 访问有关您的代码库的数据，从而提供更个性化和上下文相关的协助。
 
-Imagine asking an AI assistant: "Summarize last week's team meeting notes and schedule follow-ups with everyone."
+想象一下询问 AI 助手：“总结上周的团队会议笔记，并为每个人安排后续行动。”
 
-By using connections to data sources powered by MCP, the AI assistant can:
+通过使用由 MCP 驱动的数据源连接，AI 助手可以：
 
-- Connect to your Google Drive through an MCP server to read meeting notes
-- Understand who needs follow-ups based on the notes
-- Connect to your calendar through another MCP server to schedule the meetings automatically
+- 通过 MCP 服务器连接到您的 Google Drive 以读取会议笔记
+- 根据笔记了解谁需要后续行动
+- 通过另一个 MCP 服务器连接到您的日历来自动安排会议
 
-### For developers
+### 对于开发者
 
-MCP reduces development time and complexity when building AI applications that need to access various data sources. With MCP, developers can focus on building great AI experiences rather than repeatedly creating custom connectors.
+MCP 在构建需要访问各种数据源的 AI 应用程序时减少了开发时间和复杂性。使用 MCP，开发者可以专注于构建出色的 AI 体验，而不是反复创建自定义连接器。
 
-Traditionally, connecting applications with data sources required building custom, one-off connections for each data source and each application. This created significant duplicative work—every developer wanting to connect their AI application to Google Drive or Slack needed to build their own connection.
+传统上，将应用程序与数据源连接需要为每个数据源和每个应用程序构建自定义的一次性连接。这造成了大量的重复工作 — 每个想要将其 AI 应用程序连接到 Google Drive 或 Slack 的开发者都需要构建自己的连接。
 
-MCP simplifies this by enabling developers to build MCP servers for data sources that are then reusable by various applications. For example, using the open source Google Drive MCP server, many different applications can access data from Google Drive without each developer needing to build a custom connection.
+MCP 通过使开发者能够为数据源构建 MCP 服务器来简化这一点，这些服务器随后可以被各种应用程序重用。例如，使用开源的 Google Drive MCP 服务器，许多不同的应用程序可以访问 Google Drive 中的数据，而无需每个开发者构建自定义连接。
 
-This open source ecosystem of MCP servers means developers can leverage existing work rather than starting from scratch, making it easier to build powerful AI applications that seamlessly integrate with the tools and data sources their users already rely on.
+这个 MCP 服务器的开源生态系统意味着开发者可以利用现有工作而不是从头开始，使构建强大的 AI 应用程序变得更容易，这些应用程序无缝集成用户已经依赖的工具和数据源。
 
-## How does MCP work?
+## MCP 如何工作？
 
 <Frame>
   <img src="/images/mcp-simple-diagram.png" />
 </Frame>
 
-MCP creates a bridge between your AI applications and your data through a straightforward system:
+MCP 通过一个简单的系统在您的 AI 应用程序和数据之间创建桥梁：
 
-- **MCP servers** connect to your data sources and tools (like Google Drive or Slack)
-- **MCP clients** are run by AI applications (like Claude Desktop) to connect them to these servers
-- When you give permission, your AI application discovers available MCP servers
-- The AI model can then use these connections to read information and take actions
+- **MCP 服务器** 连接到您的数据源和工具（如 Google Drive 或 Slack）
+- **MCP 客户端** 由 AI 应用程序（如 Claude Desktop）运行，以将它们连接到这些服务器
+- 当您给予权限时，您的 AI 应用程序会发现可用的 MCP 服务器
+- 然后 AI 模型可以使用这些连接来读取信息和采取行动
 
-This modular system means new capabilities can be added without changing AI applications themselves—just like adding new accessories to your computer without upgrading your entire system.
+这个模块化系统意味着可以添加新功能而无需更改 AI 应用程序本身 — 就像为您的计算机添加新配件而无需升级整个系统一样。
 
-## Who creates and maintains MCP servers?
+## 谁创建和维护 MCP 服务器？
 
-MCP servers are developed and maintained by:
+MCP 服务器由以下人员开发和维护：
 
-- Developers at Anthropic who build servers for common tools and data sources
-- Open source contributors who create servers for tools they use
-- Enterprise development teams building servers for their internal systems
-- Software providers making their applications AI-ready
+- Anthropic 的开发者，为常见工具和数据源构建服务器
+- 创建他们使用的工具服务器的开源贡献者
+- 为其内部系统构建服务器的企业开发团队
+- 使他们的应用程序 AI 就绪的软件提供商
 
-Once an open source MCP server is created for a data source, it can be used by any MCP-compatible AI application, creating a growing ecosystem of connections. See our [list of example servers](/examples), or [get started building your own server](/quickstart/server).
+一旦为数据源创建了开源 MCP 服务器，它就可以被任何兼容 MCP 的 AI 应用程序使用，从而创建了一个不断增长的连接生态系统。请参阅我们的 [示例服务器列表](/examples)，或 [开始构建您自己的服务器](/quickstart/server)。

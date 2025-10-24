@@ -1,37 +1,30 @@
 ---
-title: Resources
+title: 资源
 ---
 
 <div id="enable-section-numbers" />
 
-<Info>**Protocol Revision**: 2025-06-18</Info>
+<Info>**协议修订版**：2025-06-18</Info>
 
-The Model Context Protocol (MCP) provides a standardized way for servers to expose
-resources to clients. Resources allow servers to share data that provides context to
-language models, such as files, database schemas, or application-specific information.
-Each resource is uniquely identified by a
-[URI](https://datatracker.ietf.org/doc/html/rfc3986).
+Model Context Protocol (MCP) 为服务器提供了一种标准化的方式来向客户端暴露资源。资源允许服务器共享为语言模型提供上下文的数据，例如文件、数据库模式或特定于应用程序的信息。每个资源由一个[URI](https://datatracker.ietf.org/doc/html/rfc3986) 唯一标识。
 
-## User Interaction Model
+## 用户交互模型
 
-Resources in MCP are designed to be **application-driven**, with host applications
-determining how to incorporate context based on their needs.
+MCP 中的资源被设计为**应用程序驱动**，主机应用程序根据其需求决定如何纳入上下文。
 
-For example, applications could:
+例如，应用程序可以：
 
-- Expose resources through UI elements for explicit selection, in a tree or list view
-- Allow the user to search through and filter available resources
-- Implement automatic context inclusion, based on heuristics or the AI model's selection
+- 通过 UI 元素暴露资源以进行显式选择，在树或列表视图中
+- 允许用户搜索和过滤可用资源
+- 实现自动上下文包含，基于启发式或 AI 模型的选择
 
-![Example of resource context picker](/specification/2025-06-18/server/resource-picker.png)
+![资源上下文选择器的示例](/specification/2025-06-18/server/resource-picker.png)
 
-However, implementations are free to expose resources through any interface pattern that
-suits their needs&mdash;the protocol itself does not mandate any specific user
-interaction model.
+但是，实现可以自由地通过任何适合其需求的界面模式来暴露资源——协议本身并不强制要求任何特定的用户交互模型。
 
-## Capabilities
+## 能力
 
-Servers that support resources **MUST** declare the `resources` capability:
+支持资源的服务器**必须**声明 `resources` 能力：
 
 ```json
 {
@@ -44,20 +37,17 @@ Servers that support resources **MUST** declare the `resources` capability:
 }
 ```
 
-The capability supports two optional features:
+该能力支持两个可选功能：
 
-- `subscribe`: whether the client can subscribe to be notified of changes to individual
-  resources.
-- `listChanged`: whether the server will emit notifications when the list of available
-  resources changes.
+- `subscribe`：客户端是否可以订阅以接收单个资源变更的通知。
+- `listChanged`：当可用资源列表发生变化时，服务器是否会发出通知。
 
-Both `subscribe` and `listChanged` are optional&mdash;servers can support neither,
-either, or both:
+`subscribe` 和 `listChanged` 都是可选的——服务器可以不支持任何一个、任何一个或两个都支持：
 
 ```json
 {
   "capabilities": {
-    "resources": {} // Neither feature supported
+    "resources": {} // 不支持任何功能
   }
 }
 ```
@@ -66,7 +56,7 @@ either, or both:
 {
   "capabilities": {
     "resources": {
-      "subscribe": true // Only subscriptions supported
+      "subscribe": true // 仅支持订阅
     }
   }
 }
@@ -76,15 +66,15 @@ either, or both:
 {
   "capabilities": {
     "resources": {
-      "listChanged": true // Only list change notifications supported
+      "listChanged": true // 仅支持列表变更通知
     }
   }
 }
 ```
 
-## Protocol Messages
+## 协议消息
 
-### Listing Resources
+### 列出资源
 
 To discover available resources, clients send a `resources/list` request. This operation
 supports [pagination](/specification/2025-06-18/server/utilities/pagination).
@@ -123,11 +113,11 @@ supports [pagination](/specification/2025-06-18/server/utilities/pagination).
 }
 ```
 
-### Reading Resources
+### 读取资源
 
-To retrieve resource contents, clients send a `resources/read` request:
+要检索资源内容，客户端发送 `resources/read` 请求：
 
-**Request:**
+**请求：**
 
 ```json
 {
@@ -160,13 +150,11 @@ To retrieve resource contents, clients send a `resources/read` request:
 }
 ```
 
-### Resource Templates
+### 资源模板
 
-Resource templates allow servers to expose parameterized resources using
-[URI templates](https://datatracker.ietf.org/doc/html/rfc6570). Arguments may be
-auto-completed through [the completion API](/specification/2025-06-18/server/utilities/completion).
+资源模板允许服务器使用[URI 模板](https://datatracker.ietf.org/doc/html/rfc6570)暴露参数化资源。参数可以通过[完成 API](/specification/2025-06-18/server/utilities/completion) 自动完成。
 
-**Request:**
+**请求：**
 
 ```json
 {
@@ -176,7 +164,7 @@ auto-completed through [the completion API](/specification/2025-06-18/server/uti
 }
 ```
 
-**Response:**
+**响应：**
 
 ```json
 {
@@ -186,8 +174,8 @@ auto-completed through [the completion API](/specification/2025-06-18/server/uti
     "resourceTemplates": [
       {
         "uriTemplate": "file:///{path}",
-        "name": "Project Files",
-        "title": "📁 Project Files",
+        "name": "项目文件",
+        "title": "📁 项目文件",
         "description": "Access files in the project directory",
         "mimeType": "application/octet-stream"
       }
@@ -196,10 +184,9 @@ auto-completed through [the completion API](/specification/2025-06-18/server/uti
 }
 ```
 
-### List Changed Notification
+### 列表变更通知
 
-When the list of available resources changes, servers that declared the `listChanged`
-capability **SHOULD** send a notification:
+当可用资源列表发生变化时，声明了 `listChanged` 能力的服务器**应该**发送通知：
 
 ```json
 {
@@ -208,12 +195,11 @@ capability **SHOULD** send a notification:
 }
 ```
 
-### Subscriptions
+### 订阅
 
-The protocol supports optional subscriptions to resource changes. Clients can subscribe
-to specific resources and receive notifications when they change:
+协议支持可选的资源变更订阅。客户端可以订阅特定资源并在它们发生变化时接收通知：
 
-**Subscribe Request:**
+**订阅请求：**
 
 ```json
 {
@@ -226,7 +212,7 @@ to specific resources and receive notifications when they change:
 }
 ```
 
-**Update Notification:**
+**更新通知：**
 
 ```json
 {
@@ -239,87 +225,87 @@ to specific resources and receive notifications when they change:
 }
 ```
 
-## Message Flow
+## 消息流程
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant Server
 
-    Note over Client,Server: Resource Discovery
+    Note over Client,Server: 资源发现
     Client->>Server: resources/list
-    Server-->>Client: List of resources
+    Server-->>Client: 资源列表
 
-    Note over Client,Server: Resource Access
+    Note over Client,Server: 资源访问
     Client->>Server: resources/read
-    Server-->>Client: Resource contents
+    Server-->>Client: 资源内容
 
-    Note over Client,Server: Subscriptions
+    Note over Client,Server: 订阅
     Client->>Server: resources/subscribe
-    Server-->>Client: Subscription confirmed
+    Server-->>Client: 订阅确认
 
-    Note over Client,Server: Updates
+    Note over Client,Server: 更新
     Server--)Client: notifications/resources/updated
     Client->>Server: resources/read
-    Server-->>Client: Updated contents
+    Server-->>Client: 更新内容
 ```
 
-## Data Types
+## 数据类型
 
-### Resource
+### 资源
 
-A resource definition includes:
+资源定义包括：
 
-- `uri`: Unique identifier for the resource
-- `name`: The name of the resource.
-- `title`: Optional human-readable name of the resource for display purposes.
-- `description`: Optional description
-- `mimeType`: Optional MIME type
-- `size`: Optional size in bytes
+- `uri`：资源的唯一标识符
+- `name`：资源的名称。
+- `title`：可选的用于显示目的的人类可读资源名称。
+- `description`：可选描述
+- `mimeType`：可选 MIME 类型
+- `size`：可选的字节大小
 
-### Resource Contents
+### 资源内容
 
-Resources can contain either text or binary data:
+资源可以包含文本或二进制数据：
 
-#### Text Content
+#### 文本内容
 
 ```json
 {
   "uri": "file:///example.txt",
   "name": "example.txt",
-  "title": "Example Text File",
+  "title": "示例文本文件",
   "mimeType": "text/plain",
-  "text": "Resource content"
+  "text": "资源内容"
 }
 ```
 
-#### Binary Content
+#### 二进制内容
 
 ```json
 {
   "uri": "file:///example.png",
   "name": "example.png",
-  "title": "Example Image",
+  "title": "示例图像",
   "mimeType": "image/png",
   "blob": "base64-encoded-data"
 }
 ```
 
-### Annotations
+### 注解
 
-Resources, resource templates and content blocks support optional annotations that provide hints to clients about how to use or display the resource:
+资源、资源模板和内容块支持可选的注解，这些注解为客户端提供关于如何使用或显示资源的提示：
 
-- **`audience`**: An array indicating the intended audience(s) for this resource. Valid values are `"user"` and `"assistant"`. For example, `["user", "assistant"]` indicates content useful for both.
-- **`priority`**: A number from 0.0 to 1.0 indicating the importance of this resource. A value of 1 means "most important" (effectively required), while 0 means "least important" (entirely optional).
-- **`lastModified`**: An ISO 8601 formatted timestamp indicating when the resource was last modified (e.g., `"2025-01-12T15:00:58Z"`).
+- **`audience`**：一个数组，指示此资源的预期受众。有效值是 `"user"` 和 `"assistant"`。例如，`["user", "assistant"]` 表示对两者都有用的内容。
+- **`priority`**：一个从 0.0 到 1.0 的数字，表示此资源的重要性。值为 1 表示"最重要"（实际上是必需的），而 0 表示"最不重要"（完全可选）。
+- **`lastModified`**：一个 ISO 8601 格式的时间戳，表示资源最后修改的时间（例如，`"2025-01-12T15:00:58Z"`）。
 
-Example resource with annotations:
+带注解的资源示例：
 
 ```json
 {
   "uri": "file:///project/README.md",
   "name": "README.md",
-  "title": "Project Documentation",
+  "title": "项目文档",
   "mimeType": "text/markdown",
   "annotations": {
     "audience": ["user"],
@@ -329,56 +315,46 @@ Example resource with annotations:
 }
 ```
 
-Clients can use these annotations to:
+客户端可以使用这些注解来：
 
-- Filter resources based on their intended audience
-- Prioritize which resources to include in context
-- Display modification times or sort by recency
+- 根据预期受众过滤资源
+- 优先考虑要在上下文中包含的资源
+- 显示修改时间或按最近程度排序
 
-## Common URI Schemes
+## 常见 URI 方案
 
-The protocol defines several standard URI schemes. This list not
-exhaustive&mdash;implementations are always free to use additional, custom URI schemes.
+协议定义了几个标准 URI 方案。这个列表不是穷尽的——实现总是可以自由使用额外的自定义 URI 方案。
 
 ### https://
 
-Used to represent a resource available on the web.
+用于表示网络上可用的资源。
 
-Servers **SHOULD** use this scheme only when the client is able to fetch and load the
-resource directly from the web on its own—that is, it doesn’t need to read the resource
-via the MCP server.
+服务器**应该**仅在客户端能够自行从网络直接获取和加载资源时使用此方案——也就是说，它不需要通过 MCP 服务器读取资源。
 
-For other use cases, servers **SHOULD** prefer to use another URI scheme, or define a
-custom one, even if the server will itself be downloading resource contents over the
-internet.
+对于其他用例，服务器**应该**更喜欢使用另一个 URI 方案，或定义一个自定义方案，即使服务器本身将通过互联网下载资源内容。
 
 ### file://
 
-Used to identify resources that behave like a filesystem. However, the resources do not
-need to map to an actual physical filesystem.
+用于标识行为像文件系统的资源。但是，资源不需要映射到实际的物理文件系统。
 
-MCP servers **MAY** identify file:// resources with an
-[XDG MIME type](https://specifications.freedesktop.org/shared-mime-info-spec/0.14/ar01s02.html#id-1.3.14),
-like `inode/directory`, to represent non-regular files (such as directories) that don’t
-otherwise have a standard MIME type.
+MCP 服务器**可以**使用[XDG MIME 类型](https://specifications.freedesktop.org/shared-mime-info-spec/0.14/ar01s02.html#id-1.3.14)标识 file:// 资源，如 `inode/directory`，来表示没有标准 MIME 类型的非常规文件（如目录）。
 
 ### git://
 
-Git version control integration.
+Git 版本控制集成。
 
-### Custom URI Schemes
+### 自定义 URI 方案
 
-Custom URI schemes **MUST** be in accordance with [RFC3986](https://datatracker.ietf.org/doc/html/rfc3986),
-taking the above guidance in to account.
+自定义 URI 方案**必须**符合 [RFC3986](https://datatracker.ietf.org/doc/html/rfc3986)，考虑到上述指导。
 
-## Error Handling
+## 错误处理
 
-Servers **SHOULD** return standard JSON-RPC errors for common failure cases:
+服务器**应该**为常见故障情况返回标准 JSON-RPC 错误：
 
-- Resource not found: `-32002`
-- Internal errors: `-32603`
+- 资源未找到：`-32002`
+- 内部错误：`-32603`
 
-Example error:
+错误示例：
 
 ```json
 {
@@ -386,7 +362,7 @@ Example error:
   "id": 5,
   "error": {
     "code": -32002,
-    "message": "Resource not found",
+    "message": "资源未找到",
     "data": {
       "uri": "file:///nonexistent.txt"
     }
@@ -394,9 +370,9 @@ Example error:
 }
 ```
 
-## Security Considerations
+## 安全注意事项
 
-1. Servers **MUST** validate all resource URIs
-2. Access controls **SHOULD** be implemented for sensitive resources
-3. Binary data **MUST** be properly encoded
-4. Resource permissions **SHOULD** be checked before operations
+1. 服务器**必须**验证所有资源 URI
+2. 敏感资源的访问控制**应该**被实现
+3. 二进制数据**必须**被正确编码
+4. 资源权限**应该**在操作前被检查

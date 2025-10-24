@@ -1,27 +1,26 @@
 ---
-title: Key Changes
+title: 主要更改
 ---
 
 <div id="enable-section-numbers" />
 
-This document lists changes made to the Model Context Protocol (MCP) specification since
-the previous revision, [2025-06-18](/specification/2025-06-18).
+本文档列出了自上一修订版[2025-06-18](/specification/2025-06-18)以来对Model Context Protocol (MCP)规范所做的更改。
 
-## Major changes
+## 主要更改
 
-1. Enhance authorization server discovery with support for [OpenID Connect Discovery 1.0](https://openid.net/specs/openid-connect-discovery-1_0.html). (PR [#797](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/797))
-2. Allow servers to expose icons as additional metadata for tools, resources, resource templates, and prompts ([SEP-973](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973)).
-3. Enhance authorization flows with incremental scope consent via `WWW-Authenticate` ([SEP-835](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/835))
-4. Provide guidance on tool names ([SEP-986](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1603))
+1. 通过支持[OpenID Connect Discovery 1.0](https://openid.net/specs/openid-connect-discovery-1_0.html)增强授权服务器发现。(PR [#797](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/797))
+2. 允许服务器将图标作为工具、资源、资源模板和提示的附加元数据公开([SEP-973](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973))。
+3. 通过`WWW-Authenticate`增强授权流程的增量范围同意([SEP-835](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/835))
+4. 提供工具命名的指导([SEP-986](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1603))
 
-## Minor changes
+## 次要更改
 
-1. Clarify that servers must respond with HTTP 403 Forbidden for invalid Origin headers in Streamable HTTP transport. (PR [#1439](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1439))
-2. Updated the [Security Best Practices guidance](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices).
+1. 澄清服务器必须在Streamable HTTP传输中对无效的Origin标头使用HTTP 403 Forbidden响应。(PR [#1439](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1439))
+2. 更新了[安全最佳实践指导](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices)。
 
-## Other schema changes
+## 其他模式更改
 
-## Full changelog
+## 完整更改日志
 
-For a complete list of all changes that have been made since the last protocol revision,
-[see GitHub](https://github.com/modelcontextprotocol/specification/compare/2025-06-18...draft).
+要查看自上次协议修订以来所做的所有更改的完整列表，
+[请参阅GitHub](https://github.com/modelcontextprotocol/specification/compare/2025-06-18...draft)。

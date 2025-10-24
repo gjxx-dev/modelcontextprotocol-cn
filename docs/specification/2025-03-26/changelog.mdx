@@ -1,36 +1,24 @@
 ---
-title: Key Changes
+title: 主要变更
 ---
 
-This document lists changes made to the Model Context Protocol (MCP) specification since
-the previous revision, [2024-11-05](/specification/2024-11-05).
+此文档列出了自上一版本[2024-11-05](/specification/2024-11-05)以来对Model Context Protocol (MCP)规范所做的更改。
 
-## Major changes
+## 主要变更
 
-1. Added a comprehensive **[authorization framework](/specification/2025-03-26/basic/authorization)**
-   based on OAuth 2.1 (PR
-   [#133](https://github.com/modelcontextprotocol/specification/pull/133))
-1. Replaced the previous HTTP+SSE transport with a more flexible **[Streamable HTTP
-   transport](/specification/2025-03-26/basic/transports#streamable-http)** (PR
-   [#206](https://github.com/modelcontextprotocol/specification/pull/206))
-1. Added support for JSON-RPC **[batching](https://www.jsonrpc.org/specification#batch)**
-   (PR [#228](https://github.com/modelcontextprotocol/specification/pull/228))
-1. Added comprehensive **tool annotations** for better describing tool behavior, like
-   whether it is read-only or destructive (PR
-   [#185](https://github.com/modelcontextprotocol/specification/pull/185))
+1. 添加了基于OAuth 2.1的全面**[授权框架](/specification/2025-03-26/basic/authorization)** (PR [#133](https://github.com/modelcontextprotocol/specification/pull/133))
+1. 用更灵活的**[可流式HTTP传输](/specification/2025-03-26/basic/transports#streamable-http)**替换了之前的HTTP+SSE传输 (PR [#206](https://github.com/modelcontextprotocol/specification/pull/206))
+1. 添加了对JSON-RPC**[批处理](https://www.jsonrpc.org/specification#batch)**的支持 (PR [#228](https://github.com/modelcontextprotocol/specification/pull/228))
+1. 添加了全面的**工具注解**以更好地描述工具行为，例如它是只读还是破坏性的 (PR [#185](https://github.com/modelcontextprotocol/specification/pull/185))
 
-## Other schema changes
+## 其他模式变更
 
-- Added `message` field to `ProgressNotification` to provide descriptive status updates
-- Added support for audio data, joining the existing text and image content types
-- Added `completions` capability to explicitly indicate support for argument
-  autocompletion suggestions
+- 为`ProgressNotification`添加了`message`字段以提供描述性状态更新
+- 添加了对音频数据的支持，加入了现有的文本和图像内容类型
+- 添加了`completions`功能以明确表示对参数自动完成功能的支持
 
-See
-[the updated schema](http://github.com/modelcontextprotocol/specification/tree/main/schema/2025-03-26/schema.ts)
-for more details.
+有关更多详细信息，请参见[更新的模式](http://github.com/modelcontextprotocol/specification/tree/main/schema/2025-03-26/schema.ts)。
 
-## Full changelog
+## 完整变更日志
 
-For a complete list of all changes that have been made since the last protocol revision,
-[see GitHub](https://github.com/modelcontextprotocol/specification/compare/2024-11-05...2025-03-26).
+有关自上次协议修订以来所做所有更改的完整列表，请[参见GitHub](https://github.com/modelcontextprotocol/specification/compare/2024-11-05...2025-03-26)。

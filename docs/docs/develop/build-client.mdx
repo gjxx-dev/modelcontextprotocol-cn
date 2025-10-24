@@ -1,86 +1,86 @@
 ---
-title: "Build an MCP client"
-description: "Get started building your own client that can integrate with all MCP servers."
+title: "构建 MCP 客户端"
+description: "开始构建您自己的客户端，可以与所有 MCP 服务器集成。"
 ---
 
-In this tutorial, you'll learn how to build an LLM-powered chatbot client that connects to MCP servers.
+在本教程中，您将学习如何构建一个连接到 MCP 服务器的 LLM 驱动聊天机器人客户端。
 
-Before you begin, it helps to have gone through our [Build an MCP Server](/docs/develop/build-server) tutorial so you can understand how clients and servers communicate.
+在开始之前，通过我们的[构建 MCP 服务器](/docs/develop/build-server)教程会有帮助，这样您就可以理解客户端和服务器如何通信。
 
 <Tabs>
 <Tab title="Python">
 
-[You can find the complete code for this tutorial here.](https://github.com/modelcontextprotocol/quickstart-resources/tree/main/mcp-client-python)
+[您可以在此处找到本教程的完整代码。](https://github.com/modelcontextprotocol/quickstart-resources/tree/main/mcp-client-python)
 
-## System Requirements
+## 系统要求
 
-Before starting, ensure your system meets these requirements:
+在开始之前，确保您的系统满足这些要求：
 
-- Mac or Windows computer
-- Latest Python version installed
-- Latest version of `uv` installed
+- Mac 或 Windows 计算机
+- 已安装最新 Python 版本
+- 已安装最新版本的 `uv`
 
-## Setting Up Your Environment
+## 设置您的环境
 
-First, create a new Python project with `uv`:
+首先，使用 `uv` 创建一个新的 Python 项目：
 
 <CodeGroup>
 
 ```bash macOS/Linux
-# Create project directory
+# 创建项目目录
 uv init mcp-client
 cd mcp-client
 
-# Create virtual environment
+# 创建虚拟环境
 uv venv
 
-# Activate virtual environment
+# 激活虚拟环境
 source .venv/bin/activate
 
-# Install required packages
+# 安装所需包
 uv add mcp anthropic python-dotenv
 
-# Remove boilerplate files
+# 删除样板文件
 rm main.py
 
-# Create our main file
+# 创建我们的主文件
 touch client.py
 ```
 
 ```powershell Windows
-# Create project directory
+# 创建项目目录
 uv init mcp-client
 cd mcp-client
 
-# Create virtual environment
+# 创建虚拟环境
 uv venv
 
-# Activate virtual environment
+# 激活虚拟环境
 .venv\Scripts\activate
 
-# Install required packages
+# 安装所需包
 uv add mcp anthropic python-dotenv
 
-# Remove boilerplate files
+# 删除样板文件
 del main.py
 
-# Create our main file
+# 创建我们的主文件
 new-item client.py
 ```
 
 </CodeGroup>
 
-## Setting Up Your API Key
+## 设置您的 API 密钥
 
-You'll need an Anthropic API key from the [Anthropic Console](https://console.anthropic.com/settings/keys).
+您需要从 [Anthropic Console](https://console.anthropic.com/settings/keys) 获取 Anthropic API 密钥。
 
-Create a `.env` file to store it:
+创建一个 `.env` 文件来存储它：
 
 ```bash
 echo "ANTHROPIC_API_KEY=your-api-key-goes-here" > .env
 ```
 
-Add `.env` to your `.gitignore`:
+将 `.env` 添加到您的 `.gitignore`：
 
 ```bash
 echo ".env" >> .gitignore
@@ -88,15 +88,15 @@ echo ".env" >> .gitignore
 
 <Warning>
 
-Make sure you keep your `ANTHROPIC_API_KEY` secure!
+确保您保持 `ANTHROPIC_API_KEY` 的安全！
 
 </Warning>
 
-## Creating the Client
+## 创建客户端
 
-### Basic Client Structure
+### 基本客户端结构
 
-First, let's set up our imports and create the basic client class:
+首先，让我们设置导入并创建基本客户端类：
 
 ```python
 import asyncio
@@ -120,16 +120,16 @@ class MCPClient:
     # methods will go here
 ```
 
-### Server Connection Management
+### 服务器连接管理
 
-Next, we'll implement the method to connect to an MCP server:
+接下来，我们将实现连接到 MCP 服务器的方法：
 
 ```python
 async def connect_to_server(self, server_script_path: str):
-    """Connect to an MCP server
+    """连接到 MCP 服务器
 
     Args:
-        server_script_path: Path to the server script (.py or .js)
+        server_script_path: 服务器脚本路径（.py 或 .js）
     """
     is_python = server_script_path.endswith('.py')
     is_js = server_script_path.endswith('.js')
@@ -155,13 +155,13 @@ async def connect_to_server(self, server_script_path: str):
     print("\nConnected to server with tools:", [tool.name for tool in tools])
 ```
 
-### Query Processing Logic
+### 查询处理逻辑
 
-Now let's add the core functionality for processing queries and handling tool calls:
+现在让我们添加处理查询和处理工具调用的核心功能：
 
 ```python
 async def process_query(self, query: str) -> str:
-    """Process a query using Claude and available tools"""
+    """使用 Claude 和可用工具处理查询"""
     messages = [
         {
             "role": "user",
@@ -176,7 +176,7 @@ async def process_query(self, query: str) -> str:
         "input_schema": tool.inputSchema
     } for tool in response.tools]
 
-    # Initial Claude API call
+    # 初始 Claude API 调用
     response = self.anthropic.messages.create(
         model="claude-3-5-sonnet-20241022",
         max_tokens=1000,
@@ -184,7 +184,7 @@ async def process_query(self, query: str) -> str:
         tools=available_tools
     )
 
-    # Process response and handle tool calls
+    # 处理响应并处理工具调用
     final_text = []
 
     assistant_message_content = []
@@ -196,7 +196,7 @@ async def process_query(self, query: str) -> str:
             tool_name = content.name
             tool_args = content.input
 
-            # Execute tool call
+            # 执行工具调用
             result = await self.session.call_tool(tool_name, tool_args)
             final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
 
@@ -229,19 +229,19 @@ async def process_query(self, query: str) -> str:
     return "\n".join(final_text)
 ```
 
-### Interactive Chat Interface
+### 交互式聊天界面
 
-Now we'll add the chat loop and cleanup functionality:
+现在我们将添加聊天循环和清理功能：
 
 ```python
 async def chat_loop(self):
-    """Run an interactive chat loop"""
-    print("\nMCP Client Started!")
-    print("Type your queries or 'quit' to exit.")
+    """运行交互式聊天循环"""
+    print("\nMCP 客户端已启动！")
+    print("输入您的查询或输入 'quit' 退出。")
 
     while True:
         try:
-            query = input("\nQuery: ").strip()
+            query = input("\n查询: ").strip()
 
             if query.lower() == 'quit':
                 break
@@ -250,21 +250,21 @@ async def chat_loop(self):
             print("\n" + response)
 
         except Exception as e:
-            print(f"\nError: {str(e)}")
+            print(f"\n错误: {str(e)}")
 
 async def cleanup(self):
-    """Clean up resources"""
+    """清理资源"""
     await self.exit_stack.aclose()
 ```
 
-### Main Entry Point
+### 主入口点
 
-Finally, we'll add the main execution logic:
+最后，我们将添加主执行逻辑：
 
 ```python
 async def main():
     if len(sys.argv) < 2:
-        print("Usage: python client.py <path_to_server_script>")
+        print("用法: python client.py <服务器脚本路径>")
         sys.exit(1)
 
     client = MCPClient()
@@ -279,225 +279,225 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-You can find the complete `client.py` file [here](https://github.com/modelcontextprotocol/quickstart-resources/blob/main/mcp-client-python/client.py).
+您可以在[此处](https://github.com/modelcontextprotocol/quickstart-resources/blob/main/mcp-client-python/client.py)找到完整的 `client.py` 文件。
 
-## Key Components Explained
+## 关键组件解释
 
-### 1. Client Initialization
+### 1. 客户端初始化
 
-- The `MCPClient` class initializes with session management and API clients
-- Uses `AsyncExitStack` for proper resource management
-- Configures the Anthropic client for Claude interactions
+- `MCPClient` 类使用会话管理和 API 客户端进行初始化
+- 使用 `AsyncExitStack` 进行适当的资源管理
+- 配置 Anthropic 客户端用于 Claude 交互
 
-### 2. Server Connection
+### 2. 服务器连接
 
-- Supports both Python and Node.js servers
-- Validates server script type
-- Sets up proper communication channels
-- Initializes the session and lists available tools
+- 支持 Python 和 Node.js 服务器
+- 验证服务器脚本类型
+- 设置适当的通信通道
+- 初始化会话并列出可用工具
 
-### 3. Query Processing
+### 3. 查询处理
 
-- Maintains conversation context
-- Handles Claude's responses and tool calls
-- Manages the message flow between Claude and tools
-- Combines results into a coherent response
+- 维护对话上下文
+- 处理 Claude 的响应和工具调用
+- 管理 Claude 和工具之间的消息流
+- 将结果组合成连贯的响应
 
-### 4. Interactive Interface
+### 4. 交互式界面
 
-- Provides a simple command-line interface
-- Handles user input and displays responses
-- Includes basic error handling
-- Allows graceful exit
+- 提供简单的命令行界面
+- 处理用户输入并显示响应
+- 包括基本的错误处理
+- 允许优雅退出
 
-### 5. Resource Management
+### 5. 资源管理
 
-- Proper cleanup of resources
-- Error handling for connection issues
-- Graceful shutdown procedures
+- 适当清理资源
+- 处理连接问题的错误处理
+- 优雅的关闭过程
 
-## Common Customization Points
+## 常见自定义点
 
-1. **Tool Handling**
-   - Modify `process_query()` to handle specific tool types
-   - Add custom error handling for tool calls
-   - Implement tool-specific response formatting
+1. **工具处理**
+   - 修改 `process_query()` 以处理特定工具类型
+   - 为工具调用添加自定义错误处理
+   - 实现工具特定的响应格式化
 
-2. **Response Processing**
-   - Customize how tool results are formatted
-   - Add response filtering or transformation
-   - Implement custom logging
+2. **响应处理**
+   - 自定义工具结果的格式化方式
+   - 添加响应过滤或转换
+   - 实现自定义日志记录
 
-3. **User Interface**
-   - Add a GUI or web interface
-   - Implement rich console output
-   - Add command history or auto-completion
+3. **用户界面**
+   - 添加 GUI 或 Web 界面
+   - 实现丰富的控制台输出
+   - 添加命令历史记录或自动补全
 
-## Running the Client
+## 运行客户端
 
-To run your client with any MCP server:
+要使用任何 MCP 服务器运行您的客户端：
 
 ```bash
-uv run client.py path/to/server.py # python server
-uv run client.py path/to/build/index.js # node server
+uv run client.py path/to/server.py # python 服务器
+uv run client.py path/to/build/index.js # node 服务器
 ```
 
 <Note>
 
-If you're continuing [the weather tutorial from the server quickstart](https://github.com/modelcontextprotocol/quickstart-resources/tree/main/weather-server-python), your command might look something like this: `python client.py .../quickstart-resources/weather-server-python/weather.py`
+如果您正在继续[服务器快速入门中的天气教程](https://github.com/modelcontextprotocol/quickstart-resources/tree/main/weather-server-python)，您的命令可能如下所示：`python client.py .../quickstart-resources/weather-server-python/weather.py`
 
 </Note>
 
-The client will:
+客户端将：
 
-1. Connect to the specified server
-2. List available tools
-3. Start an interactive chat session where you can:
-   - Enter queries
-   - See tool executions
-   - Get responses from Claude
+1. 连接到指定的服务器
+2. 列出可用工具
+3. 开始交互式聊天会话，您可以：
+   - 输入查询
+   - 查看工具执行
+   - 从 Claude 获取响应
 
-Here's an example of what it should look like if connected to the weather server from the server quickstart:
+以下是连接到服务器快速入门中的天气服务器时应该的样子示例：
 
 <Frame>
   <img src="/images/client-claude-cli-python.png" />
 </Frame>
 
-## How It Works
+## 工作原理
 
-When you submit a query:
+当您提交查询时：
 
-1. The client gets the list of available tools from the server
-2. Your query is sent to Claude along with tool descriptions
-3. Claude decides which tools (if any) to use
-4. The client executes any requested tool calls through the server
-5. Results are sent back to Claude
-6. Claude provides a natural language response
-7. The response is displayed to you
+1. 客户端从服务器获取可用工具列表
+2. 您的查询连同工具描述一起发送给 Claude
+3. Claude 决定使用哪些工具（如果有）
+4. 客户端通过服务器执行任何请求的工具调用
+5. 结果发送回 Claude
+6. Claude 提供自然语言响应
+7. 响应显示给您
 
-## Best practices
+## 最佳实践
 
-1. **Error Handling**
-   - Always wrap tool calls in try-catch blocks
-   - Provide meaningful error messages
-   - Gracefully handle connection issues
+1. **错误处理**
+   - 始终在 try-catch 块中包装工具调用
+   - 提供有意义的错误消息
+   - 优雅地处理连接问题
 
-2. **Resource Management**
-   - Use `AsyncExitStack` for proper cleanup
-   - Close connections when done
-   - Handle server disconnections
+2. **资源管理**
+   - 使用 `AsyncExitStack` 进行适当清理
+   - 完成后关闭连接
+   - 处理服务器断开连接
 
-3. **Security**
-   - Store API keys securely in `.env`
-   - Validate server responses
-   - Be cautious with tool permissions
+3. **安全性**
+   - 将 API 密钥安全存储在 `.env` 中
+   - 验证服务器响应
+   - 对工具权限保持谨慎
 
-4. **Tool Names**
-   - Tool names can be validated according to the format specified [here](/specification/draft/server/tools#tool-names)
-   - If a tool name conforms to the specified format, it should not fail validation by an MCP client
+4. **工具名称**
+   - 工具名称可以根据[此处](/specification/draft/server/tools#tool-names)指定的格式进行验证
+   - 如果工具名称符合指定格式，它不应该被 MCP 客户端验证失败
 
-## Troubleshooting
+## 故障排除
 
-### Server Path Issues
+### 服务器路径问题
 
-- Double-check the path to your server script is correct
-- Use the absolute path if the relative path isn't working
-- For Windows users, make sure to use forward slashes (/) or escaped backslashes (\\) in the path
-- Verify the server file has the correct extension (.py for Python or .js for Node.js)
+- 仔细检查服务器脚本的路径是否正确
+- 如果相对路径不起作用，请使用绝对路径
+- 对于 Windows 用户，确保在路径中使用正斜杠 (/) 或转义的反斜杠 (\\)
+- 验证服务器文件具有正确的扩展名（Python 为 .py，Node.js 为 .js）
 
-Example of correct path usage:
+正确路径使用示例：
 
 ```bash
-# Relative path
+# 相对路径
 uv run client.py ./server/weather.py
 
-# Absolute path
+# 绝对路径
 uv run client.py /Users/username/projects/mcp-server/weather.py
 
-# Windows path (either format works)
+# Windows 路径（任一格式都有效）
 uv run client.py C:/projects/mcp-server/weather.py
 uv run client.py C:\\projects\\mcp-server\\weather.py
 ```
 
-### Response Timing
+### 响应时间
 
-- The first response might take up to 30 seconds to return
-- This is normal and happens while:
-  - The server initializes
-  - Claude processes the query
-  - Tools are being executed
-- Subsequent responses are typically faster
-- Don't interrupt the process during this initial waiting period
+- 第一个响应可能需要长达 30 秒才能返回
+- 这是正常的，会发生以下情况：
+  - 服务器正在初始化
+  - Claude 正在处理查询
+  - 工具正在执行
+- 后续响应通常更快
+- 在这个初始等待期间不要中断进程
 
-### Common Error Messages
+### 常见错误消息
 
-If you see:
+如果您看到：
 
-- `FileNotFoundError`: Check your server path
-- `Connection refused`: Ensure the server is running and the path is correct
-- `Tool execution failed`: Verify the tool's required environment variables are set
-- `Timeout error`: Consider increasing the timeout in your client configuration
+- `FileNotFoundError`：检查您的服务器路径
+- `Connection refused`：确保服务器正在运行且路径正确
+- `Tool execution failed`：验证工具所需的环境变量已设置
+- `Timeout error`：考虑在客户端配置中增加超时时间
 
 </Tab>
 
 <Tab title="Node">
 
-[You can find the complete code for this tutorial here.](https://github.com/modelcontextprotocol/quickstart-resources/tree/main/mcp-client-typescript)
+[您可以在此处找到本教程的完整代码。](https://github.com/modelcontextprotocol/quickstart-resources/tree/main/mcp-client-typescript)
 
-## System Requirements
+## 系统要求
 
-Before starting, ensure your system meets these requirements:
+在开始之前，确保您的系统满足这些要求：
 
-- Mac or Windows computer
-- Node.js 17 or higher installed
-- Latest version of `npm` installed
-- Anthropic API key (Claude)
+- Mac 或 Windows 计算机
+- 已安装 Node.js 17 或更高版本
+- 已安装最新版本的 `npm`
+- Anthropic API 密钥（Claude）
 
-## Setting Up Your Environment
+## 设置您的环境
 
-First, let's create and set up our project:
+首先，让我们创建并设置项目：
 
 <CodeGroup>
 
 ```bash macOS/Linux
-# Create project directory
+# 创建项目目录
 mkdir mcp-client-typescript
 cd mcp-client-typescript
 
-# Initialize npm project
+# 初始化 npm 项目
 npm init -y
 
-# Install dependencies
+# 安装依赖
 npm install @anthropic-ai/sdk @modelcontextprotocol/sdk dotenv
 
-# Install dev dependencies
+# 安装开发依赖
 npm install -D @types/node typescript
 
-# Create source file
+# 创建源文件
 touch index.ts
 ```
 
 ```powershell Windows
-# Create project directory
+# 创建项目目录
 md mcp-client-typescript
 cd mcp-client-typescript
 
-# Initialize npm project
+# 初始化 npm 项目
 npm init -y
 
-# Install dependencies
+# 安装依赖
 npm install @anthropic-ai/sdk @modelcontextprotocol/sdk dotenv
 
-# Install dev dependencies
+# 安装开发依赖
 npm install -D @types/node typescript
 
-# Create source file
+# 创建源文件
 new-item index.ts
 ```
 
 </CodeGroup>
 
-Update your `package.json` to set `type: "module"` and a build script:
+更新您的 `package.json` 以设置 `type: "module"` 和构建脚本：
 
 ```json package.json
 {
@@ -508,7 +508,7 @@ Update your `package.json` to set `type: "module"` and a build script:
 }
 ```
 
-Create a `tsconfig.json` in the root of your project:
+在项目根目录创建 `tsconfig.json`：
 
 ```json tsconfig.json
 {
@@ -528,17 +528,17 @@ Create a `tsconfig.json` in the root of your project:
 }
 ```
 
-## Setting Up Your API Key
+## 设置您的 API 密钥
 
-You'll need an Anthropic API key from the [Anthropic Console](https://console.anthropic.com/settings/keys).
+您需要从 [Anthropic Console](https://console.anthropic.com/settings/keys) 获取 Anthropic API 密钥。
 
-Create a `.env` file to store it:
+创建一个 `.env` 文件来存储它：
 
 ```bash
-echo "ANTHROPIC_API_KEY=<your key here>" > .env
+echo "ANTHROPIC_API_KEY=<您的密钥>" > .env
 ```
 
-Add `.env` to your `.gitignore`:
+将 `.env` 添加到您的 `.gitignore`：
 
 ```bash
 echo ".env" >> .gitignore
@@ -546,15 +546,15 @@ echo ".env" >> .gitignore
 
 <Warning>
 
-Make sure you keep your `ANTHROPIC_API_KEY` secure!
+确保您保持 `ANTHROPIC_API_KEY` 的安全！
 
 </Warning>
 
-## Creating the Client
+## 创建客户端
 
-### Basic Client Structure
+### 基本客户端结构
 
-First, let's set up our imports and create the basic client class in `index.ts`:
+首先，让我们在 `index.ts` 中设置导入并创建基本客户端类：
 
 ```typescript
 import { Anthropic } from "@anthropic-ai/sdk";
@@ -571,7 +571,7 @@ dotenv.config();
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!ANTHROPIC_API_KEY) {
-  throw new Error("ANTHROPIC_API_KEY is not set");
+  throw new Error("ANTHROPIC_API_KEY 未设置");
 }
 
 class MCPClient {
@@ -586,13 +586,13 @@ class MCPClient {
     });
     this.mcp = new Client({ name: "mcp-client-cli", version: "1.0.0" });
   }
-  // methods will go here
+  // 方法将放在这里
 }
 ```
 
-### Server Connection Management
+### 服务器连接管理
 
-Next, we'll implement the method to connect to an MCP server:
+接下来，我们将实现连接到 MCP 服务器的方法：
 
 ```typescript
 async connectToServer(serverScriptPath: string) {
@@ -600,7 +600,7 @@ async connectToServer(serverScriptPath: string) {
     const isJs = serverScriptPath.endsWith(".js");
     const isPy = serverScriptPath.endsWith(".py");
     if (!isJs && !isPy) {
-      throw new Error("Server script must be a .js or .py file");
+      throw new Error("服务器脚本必须是 .js 或 .py 文件");
     }
     const command = isPy
       ? process.platform === "win32"
@@ -623,19 +623,19 @@ async connectToServer(serverScriptPath: string) {
       };
     });
     console.log(
-      "Connected to server with tools:",
+      "已连接到服务器，工具：",
       this.tools.map(({ name }) => name)
     );
   } catch (e) {
-    console.log("Failed to connect to MCP server: ", e);
+    console.log("连接到 MCP 服务器失败：", e);
     throw e;
   }
 }
 ```
 
-### Query Processing Logic
+### 查询处理逻辑
 
-Now let's add the core functionality for processing queries and handling tool calls:
+现在让我们添加处理查询和处理工具调用的核心功能：
 
 ```typescript
 async processQuery(query: string) {
@@ -667,7 +667,7 @@ async processQuery(query: string) {
         arguments: toolArgs,
       });
       finalText.push(
-        `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
+        `[调用工具 ${toolName} 参数 ${JSON.stringify(toolArgs)}]`
       );
 
       messages.push({
@@ -691,9 +691,9 @@ async processQuery(query: string) {
 }
 ```
 
-### Interactive Chat Interface
+### 交互式聊天界面
 
-Now we'll add the chat loop and cleanup functionality:
+现在我们将添加聊天循环和清理功能：
 
 ```typescript
 async chatLoop() {

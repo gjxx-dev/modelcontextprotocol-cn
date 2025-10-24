@@ -1,38 +1,31 @@
 ---
-title: Transports
+title: 传输
 ---
 
-<Info>**Protocol Revision**: 2025-03-26</Info>
+<Info>**协议修订**: 2025-03-26</Info>
 
-MCP uses JSON-RPC to encode messages. JSON-RPC messages **MUST** be UTF-8 encoded.
+MCP使用JSON-RPC对消息进行编码。JSON-RPC消息**必须**是UTF-8编码的。
 
-The protocol currently defines two standard transport mechanisms for client-server
-communication:
+该协议目前为客户端-服务器通信定义了两种标准传输机制：
 
-1. [stdio](#stdio), communication over standard in and standard out
+1. [stdio](#stdio)，通过标准输入和标准输出进行通信
 2. [Streamable HTTP](#streamable-http)
 
-Clients **SHOULD** support stdio whenever possible.
+客户端**应该**尽可能支持stdio。
 
-It is also possible for clients and servers to implement
-[custom transports](#custom-transports) in a pluggable fashion.
+客户端和服务器也可以以可插拔的方式实现[自定义传输](#custom-transports)。
 
 ## stdio
 
-In the **stdio** transport:
+在**stdio**传输中：
 
-- The client launches the MCP server as a subprocess.
-- The server reads JSON-RPC messages from its standard input (`stdin`) and sends messages
-  to its standard output (`stdout`).
-- Messages may be JSON-RPC requests, notifications, responses—or a JSON-RPC
-  [batch](https://www.jsonrpc.org/specification#batch) containing one or more requests
-  and/or notifications.
-- Messages are delimited by newlines, and **MUST NOT** contain embedded newlines.
-- The server **MAY** write UTF-8 strings to its standard error (`stderr`) for logging
-  purposes. Clients **MAY** capture, forward, or ignore this logging.
-- The server **MUST NOT** write anything to its `stdout` that is not a valid MCP message.
-- The client **MUST NOT** write anything to the server's `stdin` that is not a valid MCP
-  message.
+- 客户端将MCP服务器作为子进程启动。
+- 服务器从其标准输入（`stdin`）读取JSON-RPC消息，并将消息发送到其标准输出（`stdout`）。
+- 消息可以是JSON-RPC请求、通知、响应——或者包含一个或多个请求和/或通知的JSON-RPC[批处理](https://www.jsonrpc.org/specification#batch)。
+- 消息由换行符分隔，并且**不能**包含嵌入的换行符。
+- 服务器**可以**为其标准错误（`stderr`）写入UTF-8字符串以用于日志记录目的。客户端**可以**捕获、转发或忽略此日志记录。
+- 服务器**不能**将其不是有效MCP消息的任何内容写入其`stdout`。
+- 客户端**不能**将其不是有效MCP消息的任何内容写入服务器的`stdin`。
 
 ```mermaid
 sequenceDiagram
@@ -60,51 +53,34 @@ guide below.
 
 </Info>
 
-In the **Streamable HTTP** transport, the server operates as an independent process that
-can handle multiple client connections. This transport uses HTTP POST and GET requests.
-Server can optionally make use of
-[Server-Sent Events](https://en.wikipedia.org/wiki/Server-sent_events) (SSE) to stream
-multiple server messages. This permits basic MCP servers, as well as more feature-rich
-servers supporting streaming and server-to-client notifications and requests.
+在**Streamable HTTP**传输中，服务器作为独立进程运行，可以处理多个客户端连接。此传输使用HTTP POST和GET请求。服务器可以选择使用[Server-Sent Events](https://en.wikipedia.org/wiki/Server-sent_events) (SSE)来流式传输多个服务器消息。这允许基本的MCP服务器，以及支持流式传输和服务器到客户端通知和请求的更丰富的服务器。
 
-The server **MUST** provide a single HTTP endpoint path (hereafter referred to as the
-**MCP endpoint**) that supports both POST and GET methods. For example, this could be a
-URL like `https://example.com/mcp`.
+服务器**必须**提供支持POST和GET方法的单个HTTP端点路径（以下简称**MCP端点**）。例如，这可以是像`https://example.com/mcp`这样的URL。
 
-#### Security Warning
+#### 安全警告
 
-When implementing Streamable HTTP transport:
+实施Streamable HTTP传输时：
 
-1. Servers **MUST** validate the `Origin` header on all incoming connections to prevent DNS rebinding attacks
-2. When running locally, servers **SHOULD** bind only to localhost (127.0.0.1) rather than all network interfaces (0.0.0.0)
-3. Servers **SHOULD** implement proper authentication for all connections
+1. 服务器**必须**验证所有传入连接上的`Origin`头以防止DNS重新绑定攻击
+2. 在本地运行时，服务器**应该**仅绑定到localhost (127.0.0.1)而不是所有网络接口(0.0.0.0)
+3. 服务器**应该**为所有连接实施适当的认证
 
-Without these protections, attackers could use DNS rebinding to interact with local MCP servers from remote websites.
+如果没有这些保护，攻击者可以使用DNS重新绑定从远程网站与本地MCP服务器交互。
 
-### Sending Messages to the Server
+### 向服务器发送消息
 
-Every JSON-RPC message sent from the client **MUST** be a new HTTP POST request to the
-MCP endpoint.
+从客户端发送的每个JSON-RPC消息**必须**是对MCP端点的新HTTP POST请求。
 
-1. The client **MUST** use HTTP POST to send JSON-RPC messages to the MCP endpoint.
-2. The client **MUST** include an `Accept` header, listing both `application/json` and
-   `text/event-stream` as supported content types.
-3. The body of the POST request **MUST** be one of the following:
-   - A single JSON-RPC _request_, _notification_, or _response_
-   - An array [batching](https://www.jsonrpc.org/specification#batch) one or more
-     _requests and/or notifications_
-   - An array [batching](https://www.jsonrpc.org/specification#batch) one or more
-     _responses_
-4. If the input consists solely of (any number of) JSON-RPC _responses_ or
-   _notifications_:
-   - If the server accepts the input, the server **MUST** return HTTP status code 202
-     Accepted with no body.
-   - If the server cannot accept the input, it **MUST** return an HTTP error status code
-     (e.g., 400 Bad Request). The HTTP response body **MAY** comprise a JSON-RPC _error
-     response_ that has no `id`.
-5. If the input contains any number of JSON-RPC _requests_, the server **MUST** either
-   return `Content-Type: text/event-stream`, to initiate an SSE stream, or
-   `Content-Type: application/json`, to return one JSON object. The client **MUST**
+1. 客户端**必须**使用HTTP POST将JSON-RPC消息发送到MCP端点。
+2. 客户端**必须**包含`Accept`头，列出`application/json`和`text/event-stream`作为支持的内容类型。
+3. POST请求的主体**必须**是以下之一：
+   - 单个JSON-RPC _请求_、_通知_或_响应_
+   - 数组[批处理](https://www.jsonrpc.org/specification#batch)一个或多个_requests和/或通知_
+   - 数组[批处理](https://www.jsonrpc.org/specification#batch)一个或多个_responses_
+4. 如果输入仅由（任何数量的）JSON-RPC _响应_或_notifications_组成：
+   - 如果服务器接受输入，服务器**必须**返回HTTP状态码202 Accepted且无主体。
+   - 如果服务器无法接受输入，它**必须**返回HTTP错误状态码（例如400 Bad Request）。HTTP响应主体**可以**包含没有`id`的JSON-RPC _错误响应_。
+5. 如果输入包含任何数量的JSON-RPC _请求_，服务器**必须**返回`Content-Type: text/event-stream`以启动SSE流，或`Content-Type: application/json`以返回一个JSON对象。客户端**必须**
    support both these cases.
 6. If the server initiates an SSE stream:
    - The SSE stream **SHOULD** eventually include one JSON-RPC _response_ per each
@@ -121,57 +97,36 @@ MCP endpoint.
      stream.
    - Disconnection **MAY** occur at any time (e.g., due to network conditions).
      Therefore:
-     - Disconnection **SHOULD NOT** be interpreted as the client cancelling its request.
-     - To cancel, the client **SHOULD** explicitly send an MCP `CancelledNotification`.
-     - To avoid message loss due to disconnection, the server **MAY** make the stream
-       [resumable](#resumability-and-redelivery).
+     - 断开连接**不应该**被解释为客户端取消其请求。
+     - 要取消，客户端**应该**明确发送MCP `CancelledNotification`。
+     - 为避免由于断开连接而丢失消息，服务器**可以**使流[可恢复](#resumability-and-redelivery)。
 
-### Listening for Messages from the Server
+### 监听来自服务器的消息
 
-1. The client **MAY** issue an HTTP GET to the MCP endpoint. This can be used to open an
-   SSE stream, allowing the server to communicate to the client, without the client first
-   sending data via HTTP POST.
-2. The client **MUST** include an `Accept` header, listing `text/event-stream` as a
-   supported content type.
-3. The server **MUST** either return `Content-Type: text/event-stream` in response to
-   this HTTP GET, or else return HTTP 405 Method Not Allowed, indicating that the server
-   does not offer an SSE stream at this endpoint.
-4. If the server initiates an SSE stream:
-   - The server **MAY** send JSON-RPC _requests_ and _notifications_ on the stream. These
-     _requests_ and _notifications_ **MAY** be
-     [batched](https://www.jsonrpc.org/specification#batch).
-   - These messages **SHOULD** be unrelated to any concurrently-running JSON-RPC
-     _request_ from the client.
-   - The server **MUST NOT** send a JSON-RPC _response_ on the stream **unless**
-     [resuming](#resumability-and-redelivery) a stream associated with a previous client
-     request.
-   - The server **MAY** close the SSE stream at any time.
-   - The client **MAY** close the SSE stream at any time.
+1. 客户端**可以**向MCP端点发出HTTP GET。这可以用于打开SSE流，允许服务器与客户端通信，而客户端首先不通过HTTP POST发送数据。
+2. 客户端**必须**包含`Accept`头，将`text/event-stream`列为支持的内容类型。
+3. 服务器**必须**返回`Content-Type: text/event-stream`以响应此HTTP GET，或者返回HTTP 405 Method Not Allowed，表示服务器在此端点不提供SSE流。
+4. 如果服务器启动SSE流：
+   - 服务器**可以**在流上发送JSON-RPC _请求_和_通知_。这些_requests_和_notifications_**可以**[批处理](https://www.jsonrpc.org/specification#batch)。
+   - 这些消息**应该**与客户端的任何并发运行的JSON-RPC _request_无关。
+   - 服务器**不能**在流上发送JSON-RPC _response_ **除非**[恢复](#resumability-and-redelivery)与之前客户端请求关联的流。
+   - 服务器**可以**随时关闭SSE流。
+   - 客户端**可以**随时关闭SSE流。
 
-### Multiple Connections
+### 多个连接
 
-1. The client **MAY** remain connected to multiple SSE streams simultaneously.
-2. The server **MUST** send each of its JSON-RPC messages on only one of the connected
-   streams; that is, it **MUST NOT** broadcast the same message across multiple streams.
-   - The risk of message loss **MAY** be mitigated by making the stream
-     [resumable](#resumability-and-redelivery).
+1. 客户端**可以**同时保持连接到多个SSE流。
+2. 服务器**必须**仅在一个连接的流上发送其每个JSON-RPC消息；也就是说，它**不能**跨多个流广播相同消息。
+   - 消息丢失的风险**可以**通过使流[可恢复](#resumability-and-redelivery)来缓解。
 
-### Resumability and Redelivery
+### 可恢复性和重新传递
 
-To support resuming broken connections, and redelivering messages that might otherwise be
-lost:
+为了支持恢复断开的连接，并重新传递可能丢失的消息：
 
-1. Servers **MAY** attach an `id` field to their SSE events, as described in the
-   [SSE standard](https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation).
-   - If present, the ID **MUST** be globally unique across all streams within that
-     [session](#session-management)—or all streams with that specific client, if session
-     management is not in use.
-2. If the client wishes to resume after a broken connection, it **SHOULD** issue an HTTP
-   GET to the MCP endpoint, and include the
-   [`Last-Event-ID`](https://html.spec.whatwg.org/multipage/server-sent-events.html#the-last-event-id-header)
-   header to indicate the last event ID it received.
-   - The server **MAY** use this header to replay messages that would have been sent
-     after the last event ID, _on the stream that was disconnected_, and to resume the
+1. 服务器**可以**为其SSE事件附加`id`字段，如[SSE标准](https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation)中所述。
+   - 如果存在，ID**必须**在该[会话](#session-management)内的所有流中全局唯一——或者如果未使用会话管理，则在该特定客户端的所有流中全局唯一。
+2. 如果客户端希望在断开连接后恢复，它**应该**向MCP端点发出HTTP GET，并包含[`Last-Event-ID`](https://html.spec.whatwg.org/multipage/server-sent-events.html#the-last-event-id-header)头以指示它收到的最后一个事件ID。
+   - 服务器**可以**使用此头来重放将在最后一个事件ID之后发送的消息，_在断开的流上_，并恢复
      stream from that point.
    - The server **MUST NOT** replay messages that would have been delivered on a
      different stream.
@@ -192,23 +147,14 @@ servers which want to establish stateful sessions:
      securely generated UUID, a JWT, or a cryptographic hash).
    - The session ID **MUST** only contain visible ASCII characters (ranging from 0x21 to
      0x7E).
-2. If an `Mcp-Session-Id` is returned by the server during initialization, clients using
-   the Streamable HTTP transport **MUST** include it in the `Mcp-Session-Id` header on
-   all of their subsequent HTTP requests.
-   - Servers that require a session ID **SHOULD** respond to requests without an
-     `Mcp-Session-Id` header (other than initialization) with HTTP 400 Bad Request.
-3. The server **MAY** terminate the session at any time, after which it **MUST** respond
-   to requests containing that session ID with HTTP 404 Not Found.
-4. When a client receives HTTP 404 in response to a request containing an
-   `Mcp-Session-Id`, it **MUST** start a new session by sending a new `InitializeRequest`
-   without a session ID attached.
-5. Clients that no longer need a particular session (e.g., because the user is leaving
-   the client application) **SHOULD** send an HTTP DELETE to the MCP endpoint with the
-   `Mcp-Session-Id` header, to explicitly terminate the session.
-   - The server **MAY** respond to this request with HTTP 405 Method Not Allowed,
-     indicating that the server does not allow clients to terminate sessions.
+2. 如果服务器在初始化期间返回`Mcp-Session-Id`，使用Streamable HTTP传输的客户端**必须**在所有后续HTTP请求中包含`Mcp-Session-Id`头。
+   - 需要会话ID的服务器**应该**对不包含`Mcp-Session-Id`头的请求（初始化除外）以HTTP 400 Bad Request响应。
+3. 服务器**可以**随时终止会话，此后它**必须**对包含该会话ID的请求以HTTP 404 Not Found响应。
+4. 当客户端收到对包含`Mcp-Session-Id`的请求的HTTP 404响应时，它**必须**通过发送不附加会话ID的新`InitializeRequest`来启动新会话。
+5. 不再需要特定会话的客户端（例如，因为用户正在离开客户端应用程序）**应该**使用`Mcp-Session-Id`头向MCP端点发送HTTP DELETE，以明确终止会话。
+   - 服务器**可以**对此请求以HTTP 405 Method Not Allowed响应，表示服务器不允许客户端终止会话。
 
-### Sequence Diagram
+### 时序图
 
 ```mermaid
 sequenceDiagram
@@ -249,42 +195,26 @@ sequenceDiagram
 
 ```
 
-### Backwards Compatibility
+### 向后兼容性
 
-Clients and servers can maintain backwards compatibility with the deprecated [HTTP+SSE
-transport](/specification/2024-11-05/basic/transports#http-with-sse) (from
-protocol version 2024-11-05) as follows:
+客户端和服务器可以通过以下方式保持与已弃用的[HTTP+SSE传输](/specification/2024-11-05/basic/transports#http-with-sse)（来自协议版本2024-11-05）的向后兼容性：
 
-**Servers** wanting to support older clients should:
+**想要支持旧客户端的服务器应该：**
 
-- Continue to host both the SSE and POST endpoints of the old transport, alongside the
-  new "MCP endpoint" defined for the Streamable HTTP transport.
-  - It is also possible to combine the old POST endpoint and the new MCP endpoint, but
-    this may introduce unneeded complexity.
+- 继续托管旧传输的SSE和POST端点，以及为Streamable HTTP传输定义的新"MCP端点"。
+  - 也可以组合旧的POST端点和新的MCP端点，但这可能会引入不必要的复杂性。
 
-**Clients** wanting to support older servers should:
+**想要支持旧服务器的客户端应该：**
 
-1. Accept an MCP server URL from the user, which may point to either a server using the
-   old transport or the new transport.
-2. Attempt to POST an `InitializeRequest` to the server URL, with an `Accept` header as
-   defined above:
-   - If it succeeds, the client can assume this is a server supporting the new Streamable
-     HTTP transport.
-   - If it fails with an HTTP 4xx status code (e.g., 405 Method Not Allowed or 404 Not
-     Found):
-     - Issue a GET request to the server URL, expecting that this will open an SSE stream
-       and return an `endpoint` event as the first event.
-     - When the `endpoint` event arrives, the client can assume this is a server running
-       the old HTTP+SSE transport, and should use that transport for all subsequent
-       communication.
+1. 从用户接受MCP服务器URL，该URL可能指向使用旧传输或新传输的服务器。
+2. 尝试使用上面定义的`Accept`头向服务器URL POST `InitializeRequest`：
+   - 如果成功，客户端可以假设这是一个支持新Streamable HTTP传输的服务器。
+   - 如果它以HTTP 4xx状态码失败（例如405 Method Not Allowed或404 Not Found）：
+     - 向服务器URL发出GET请求，期望这将打开SSE流并返回`endpoint`事件作为第一个事件。
+     - 当`endpoint`事件到达时，客户端可以假设这是一个运行旧HTTP+SSE传输的服务器，并应该为所有后续通信使用该传输。
 
-## Custom Transports
+## 自定义传输
 
-Clients and servers **MAY** implement additional custom transport mechanisms to suit
-their specific needs. The protocol is transport-agnostic and can be implemented over any
-communication channel that supports bidirectional message exchange.
+客户端和服务器**可以**实施额外的自定义传输机制以满足其特定需求。该协议是传输不可知的，可以在支持双向消息交换的任何通信通道上实施。
 
-Implementers who choose to support custom transports **MUST** ensure they preserve the
-JSON-RPC message format and lifecycle requirements defined by MCP. Custom transports
-**SHOULD** document their specific connection establishment and message exchange patterns
-to aid interoperability.
+选择支持自定义传输的实施者**必须**确保它们保留MCP定义的JSON-RPC消息格式和生命周期要求。自定义传输**应该**记录其特定的连接建立和消息交换模式，以帮助互操作性。
