@@ -1,43 +1,34 @@
 ---
-title: Tools
+title: 工具
 ---
 
 <div id="enable-section-numbers" />
 
-<Info>**Protocol Revision**: draft</Info>
+<Info>**协议修订版**: draft</Info>
 
-The Model Context Protocol (MCP) allows servers to expose tools that can be invoked by
-language models. Tools enable models to interact with external systems, such as querying
-databases, calling APIs, or performing computations. Each tool is uniquely identified by
-a name and includes metadata describing its schema.
+Model Context Protocol (MCP) 允许服务器暴露可以被语言模型调用的工具。工具使模型能够与外部系统交互，例如查询数据库、调用 API 或执行计算。每个工具都由名称唯一标识，并包含描述其模式的元数据。
 
-## User Interaction Model
+## 用户交互模型
 
-Tools in MCP are designed to be **model-controlled**, meaning that the language model can
-discover and invoke tools automatically based on its contextual understanding and the
-user's prompts.
+MCP 中的工具被设计为**模型控制**的，这意味着语言模型可以基于其上下文理解和用户的提示自动发现和调用工具。
 
-However, implementations are free to expose tools through any interface pattern that
-suits their needs&mdash;the protocol itself does not mandate any specific user
-interaction model.
+但是，实现可以自由地通过任何适合其需求的界面模式来暴露工具——协议本身并不强制要求任何特定的用户交互模型。
 
 <Warning>
 
-For trust & safety and security, there **SHOULD** always
-be a human in the loop with the ability to deny tool invocations.
+为了信任、安全和安全性，**应该**始终有人工介入，能够拒绝工具调用。
 
-Applications **SHOULD**:
+应用程序**应该**：
 
-- Provide UI that makes clear which tools are being exposed to the AI model
-- Insert clear visual indicators when tools are invoked
-- Present confirmation prompts to the user for operations, to ensure a human is in the
-  loop
+- 提供清晰显示哪些工具被暴露给 AI 模型的 UI
+- 在工具被调用时插入清晰的视觉指示器
+- 为操作呈现确认提示给用户，以确保有人工介入
 
 </Warning>
 
-## Capabilities
+## 能力
 
-Servers that support tools **MUST** declare the `tools` capability:
+支持工具的服务器**必须**声明 `tools` 能力：
 
 ```json
 {
@@ -49,17 +40,15 @@ Servers that support tools **MUST** declare the `tools` capability:
 }
 ```
 
-`listChanged` indicates whether the server will emit notifications when the list of
-available tools changes.
+`listChanged` 表示当可用工具列表发生变化时，服务器是否会发出通知。
 
-## Protocol Messages
+## 协议消息
 
-### Listing Tools
+### 列出工具
 
-To discover available tools, clients send a `tools/list` request. This operation supports
-[pagination](/specification/draft/server/utilities/pagination).
+要发现可用工具，客户端发送 `tools/list` 请求。此操作支持[分页](/specification/draft/server/utilities/pagination)。
 
-**Request:**
+**请求：**
 
 ```json
 {
@@ -72,7 +61,7 @@ To discover available tools, clients send a `tools/list` request. This operation
 }
 ```
 
-**Response:**
+**响应：**
 
 ```json
 {
@@ -82,14 +71,14 @@ To discover available tools, clients send a `tools/list` request. This operation
     "tools": [
       {
         "name": "get_weather",
-        "title": "Weather Information Provider",
-        "description": "Get current weather information for a location",
+        "title": "天气信息提供者",
+        "description": "获取某个位置的当前天气信息",
         "inputSchema": {
           "type": "object",
           "properties": {
             "location": {
               "type": "string",
-              "description": "City name or zip code"
+              "description": "城市名称或邮政编码"
             }
           },
           "required": ["location"]
@@ -108,11 +97,11 @@ To discover available tools, clients send a `tools/list` request. This operation
 }
 ```
 
-### Calling Tools
+### 调用工具
 
-To invoke a tool, clients send a `tools/call` request:
+要调用工具，客户端发送 `tools/call` 请求：
 
-**Request:**
+**请求：**
 
 ```json
 {
@@ -128,7 +117,7 @@ To invoke a tool, clients send a `tools/call` request:
 }
 ```
 
-**Response:**
+**响应：**
 
 ```json
 {
@@ -138,7 +127,7 @@ To invoke a tool, clients send a `tools/call` request:
     "content": [
       {
         "type": "text",
-        "text": "Current weather in New York:\nTemperature: 72°F\nConditions: Partly cloudy"
+        "text": "纽约当前天气：\n温度：72°F\n状况：多云"
       }
     ],
     "isError": false
@@ -146,10 +135,9 @@ To invoke a tool, clients send a `tools/call` request:
 }
 ```
 
-### List Changed Notification
+### 列表变更通知
 
-When the list of available tools changes, servers that declared the `listChanged`
-capability **SHOULD** send a notification:
+当可用工具列表发生变化时，声明了 `listChanged` 能力的服务器**应该**发送通知：
 
 ```json
 {
@@ -158,7 +146,7 @@ capability **SHOULD** send a notification:
 }
 ```
 
-## Message Flow
+## 消息流程
 
 ```mermaid
 sequenceDiagram
@@ -166,81 +154,78 @@ sequenceDiagram
     participant Client
     participant Server
 
-    Note over Client,Server: Discovery
+    Note over Client,Server: 发现
     Client->>Server: tools/list
-    Server-->>Client: List of tools
+    Server-->>Client: 工具列表
 
-    Note over Client,LLM: Tool Selection
-    LLM->>Client: Select tool to use
+    Note over Client,LLM: 工具选择
+    LLM->>Client: 选择要使用的工具
 
-    Note over Client,Server: Invocation
+    Note over Client,Server: 调用
     Client->>Server: tools/call
-    Server-->>Client: Tool result
-    Client->>LLM: Process result
+    Server-->>Client: 工具结果
+    Client->>LLM: 处理结果
 
-    Note over Client,Server: Updates
+    Note over Client,Server: 更新
     Server--)Client: tools/list_changed
     Client->>Server: tools/list
-    Server-->>Client: Updated tools
+    Server-->>Client: 更新的工具
 ```
 
-## Data Types
+## 数据类型
 
-### Tool
+### 工具
 
-A tool definition includes:
+工具定义包括：
 
-- `name`: Unique identifier for the tool
-- `title`: Optional human-readable name of the tool for display purposes.
-- `description`: Human-readable description of functionality
-- `inputSchema`: JSON Schema defining expected parameters
-- `outputSchema`: Optional JSON Schema defining expected output structure
-- `annotations`: optional properties describing tool behavior
+- `name`：工具的唯一标识符
+- `title`：可选的用于显示的人类可读工具名称
+- `description`：功能的人类可读描述
+- `inputSchema`：定义预期参数的 JSON Schema
+- `outputSchema`：可选的定义预期输出结构的 JSON Schema
+- `annotations`：可选的描述工具行为的属性
 
 <Warning>
 
-For trust & safety and security, clients **MUST** consider
-tool annotations to be untrusted unless they come from trusted servers.
+为了信任、安全和安全性，客户端**必须**将工具注解视为不可信的，除非它们来自受信任的服务器。
 
 </Warning>
 
-#### Tool Names
+#### 工具名称
 
-- Tool names SHOULD be between 1 and 128 characters in length (inclusive).
-- Tool names SHOULD be considered case-sensitive.
-- The following SHOULD be the only allowed characters: uppercase and lowercase ASCII letters (A-Z, a-z), digits
-  (0-9), underscore (\_), dash (-), and dot (.)
-- Tool names SHOULD NOT contain spaces, commas, or other special characters.
-- Tool names SHOULD be unique within a server.
-- Example valid tool names:
+- 工具名称应该在 1 到 128 个字符长度之间（包括）。
+- 工具名称应该被视为区分大小写。
+- 以下应该是唯一允许的字符：大写和小写 ASCII 字母 (A-Z, a-z)、数字 (0-9)、下划线 (_)、破折号 (-) 和点 (.)
+- 工具名称不应该包含空格、逗号或其他特殊字符。
+- 工具名称在服务器内应该是唯一的。
+- 有效的工具名称示例：
   - getUser
   - DATA_EXPORT_v2
   - admin.tools.list
 
-### Tool Result
+### 工具结果
 
-Tool results may contain [**structured**](#structured-content) or **unstructured** content.
+工具结果可能包含[**结构化**](#structured-content)或**非结构化**内容。
 
-**Unstructured** content is returned in the `content` field of a result, and can contain multiple content items of different types:
+**非结构化**内容在结果的 `content` 字段中返回，可以包含不同类型的多个内容项：
 
 <Note>
-  All content types (text, image, audio, resource links, and embedded resources)
-  support optional
-  [annotations](/specification/draft/server/resources#annotations) that provide
-  metadata about audience, priority, and modification times. This is the same
-  annotation format used by resources and prompts.
+  所有内容类型（文本、图像、音频、资源链接和嵌入资源）都支持可选的
+  [注解](/specification/draft/server/resources#annotations)，这些注解提供
+  关于受众、优先级和修改时间的元数据。这是资源和提示词使用的相同
+  注解格式。
 </Note>
 
-#### Text Content
+#### 文本内容
 
 ```json
 {
   "type": "text",
-  "text": "Tool result text"
+  "text": "工具结果文本"
 }
 ```
 
-#### Image Content
+#### 图像内容
 
 ```json
 {
@@ -254,7 +239,7 @@ Tool results may contain [**structured**](#structured-content) or **unstructured
 }
 ```
 
-#### Audio Content
+#### 音频内容
 
 ```json
 {
@@ -264,32 +249,29 @@ Tool results may contain [**structured**](#structured-content) or **unstructured
 }
 ```
 
-#### Resource Links
+#### 资源链接
 
-A tool **MAY** return links to [Resources](/specification/draft/server/resources), to provide additional context
-or data. In this case, the tool will return a URI that can be subscribed to or fetched by the client:
+工具**可以**返回指向[资源](/specification/draft/server/resources)的链接，以提供额外上下文或数据。在这种情况下，工具将返回一个可以被客户端订阅或获取的 URI：
 
 ```json
 {
   "type": "resource_link",
   "uri": "file:///project/src/main.rs",
   "name": "main.rs",
-  "description": "Primary application entry point",
+  "description": "主要应用程序入口点",
   "mimeType": "text/x-rust"
 }
 ```
 
-Resource links support the same [Resource annotations](/specification/draft/server/resources#annotations) as regular resources to help clients understand how to use them.
+资源链接支持与常规资源相同的[资源注解](/specification/draft/server/resources#annotations)，以帮助客户端了解如何使用它们。
 
 <Info>
-  Resource links returned by tools are not guaranteed to appear in the results
-  of a `resources/list` request.
+  工具返回的资源链接不能保证出现在 `resources/list` 请求的结果中。
 </Info>
 
-#### Embedded Resources
+#### 嵌入资源
 
-[Resources](/specification/draft/server/resources) **MAY** be embedded to provide additional context
-or data using a suitable [URI scheme](./resources#common-uri-schemes). Servers that use embedded resources **SHOULD** implement the `resources` capability:
+[资源](/specification/draft/server/resources)**可以**被嵌入以提供额外上下文或数据，使用合适的[URI 方案](./resources#common-uri-schemes)。使用嵌入资源的服务器**应该**实现 `resources` 能力：
 
 ```json
 {
@@ -307,35 +289,35 @@ or data using a suitable [URI scheme](./resources#common-uri-schemes). Servers t
 }
 ```
 
-Embedded resources support the same [Resource annotations](/specification/draft/server/resources#annotations) as regular resources to help clients understand how to use them.
+嵌入资源支持与常规资源相同的[资源注解](/specification/draft/server/resources#annotations)，以帮助客户端了解如何使用它们。
 
-#### Structured Content
+#### 结构化内容
 
-**Structured** content is returned as a JSON object in the `structuredContent` field of a result.
+**结构化**内容作为 JSON 对象在结果的 `structuredContent` 字段中返回。
 
-For backwards compatibility, a tool that returns structured content SHOULD also return the serialized JSON in a TextContent block.
+为了向后兼容，返回结构化内容的工具也应该在 TextContent 块中返回序列化的 JSON。
 
-#### Output Schema
+#### 输出模式
 
-Tools may also provide an output schema for validation of structured results.
-If an output schema is provided:
+工具也可以为结构化结果的验证提供输出模式。
+如果提供了输出模式：
 
-- Servers **MUST** provide structured results that conform to this schema.
-- Clients **SHOULD** validate structured results against this schema.
+- 服务器**必须**提供符合此模式的结构化结果。
+- 客户端**应该**根据此模式验证结构化结果。
 
-Example tool with output schema:
+带有输出模式的工具示例：
 
 ```json
 {
   "name": "get_weather_data",
-  "title": "Weather Data Retriever",
-  "description": "Get current weather data for a location",
+  "title": "天气数据检索器",
+  "description": "获取某个位置的当前天气数据",
   "inputSchema": {
     "type": "object",
     "properties": {
       "location": {
         "type": "string",
-        "description": "City name or zip code"
+        "description": "城市名称或邮政编码"
       }
     },
     "required": ["location"]
@@ -345,15 +327,15 @@ Example tool with output schema:
     "properties": {
       "temperature": {
         "type": "number",
-        "description": "Temperature in celsius"
+        "description": "摄氏度温度"
       },
       "conditions": {
         "type": "string",
-        "description": "Weather conditions description"
+        "description": "天气状况描述"
       },
       "humidity": {
         "type": "number",
-        "description": "Humidity percentage"
+        "description": "湿度百分比"
       }
     },
     "required": ["temperature", "conditions", "humidity"]
@@ -361,7 +343,7 @@ Example tool with output schema:
 }
 ```
 
-Example valid response for this tool:
+此工具的有效响应示例：
 
 ```json
 {
@@ -383,28 +365,28 @@ Example valid response for this tool:
 }
 ```
 
-Providing an output schema helps clients and LLMs understand and properly handle structured tool outputs by:
+提供输出模式有助于客户端和 LLM 通过以下方式理解和正确处理结构化工具输出：
 
-- Enabling strict schema validation of responses
-- Providing type information for better integration with programming languages
-- Guiding clients and LLMs to properly parse and utilize the returned data
-- Supporting better documentation and developer experience
+- 启用对响应的严格模式验证
+- 为更好地与编程语言集成提供类型信息
+- 指导客户端和 LLM 正确解析和利用返回的数据
+- 支持更好的文档和开发者体验
 
-## Error Handling
+## 错误处理
 
-Tools use two error reporting mechanisms:
+工具使用两种错误报告机制：
 
-1. **Protocol Errors**: Standard JSON-RPC errors for issues like:
-   - Unknown tools
-   - Invalid arguments
-   - Server errors
+1. **协议错误**：用于如下问题的标准 JSON-RPC 错误：
+   - 未知工具
+   - 无效参数
+   - 服务器错误
 
-2. **Tool Execution Errors**: Reported in tool results with `isError: true`:
-   - API failures
-   - Invalid input data
-   - Business logic errors
+2. **工具执行错误**：在工具结果中报告，带有 `isError: true`：
+   - API 失败
+   - 无效输入数据
+   - 业务逻辑错误
 
-Example protocol error:
+协议错误示例：
 
 ```json
 {
@@ -412,12 +394,12 @@ Example protocol error:
   "id": 3,
   "error": {
     "code": -32602,
-    "message": "Unknown tool: invalid_tool_name"
+    "message": "未知工具：invalid_tool_name"
   }
 }
 ```
 
-Example tool execution error:
+工具执行错误示例：
 
 ```json
 {
@@ -427,7 +409,7 @@ Example tool execution error:
     "content": [
       {
         "type": "text",
-        "text": "Failed to fetch weather data: API rate limit exceeded"
+        "text": "获取天气数据失败：API 速率限制超出"
       }
     ],
     "isError": true
@@ -435,18 +417,17 @@ Example tool execution error:
 }
 ```
 
-## Security Considerations
+## 安全注意事项
 
-1. Servers **MUST**:
-   - Validate all tool inputs
-   - Implement proper access controls
-   - Rate limit tool invocations
-   - Sanitize tool outputs
+1. 服务器**必须**：
+   - 验证所有工具输入
+   - 实现适当的访问控制
+   - 对工具调用进行速率限制
+   - 清理工具输出
 
-2. Clients **SHOULD**:
-   - Prompt for user confirmation on sensitive operations
-   - Show tool inputs to the user before calling the server, to avoid malicious or
-     accidental data exfiltration
-   - Validate tool results before passing to LLM
-   - Implement timeouts for tool calls
-   - Log tool usage for audit purposes
+2. 客户端**应该**：
+   - 对敏感操作提示用户确认
+   - 在调用服务器之前向用户显示工具输入，以避免恶意或意外的数据泄露
+   - 在传递给 LLM 之前验证工具结果
+   - 为工具调用实现超时
+   - 为审计目的记录工具使用情况

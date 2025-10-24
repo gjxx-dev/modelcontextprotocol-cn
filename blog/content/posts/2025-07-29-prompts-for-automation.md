@@ -2,52 +2,52 @@
 date = '2025-08-04T18:00:00+01:00'
 publishDate = '2025-08-04T18:00:00+01:00'
 draft = false
-title = 'MCP Prompts: Building Workflow Automation'
+title = 'MCP 提示词：构建工作流自动化'
 author = 'Inna Harper (Core Maintainer)'
 tags = ['automation', 'mcp', 'prompts', 'tutorial']
 +++
 
-[MCP (Model Context Protocol)](https://modelcontextprotocol.io/specification/2025-06-18) prompts enable workflow automation by combining AI capabilities with structured data access. This post demonstrates how to build automations using MCP's [prompts](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts) and [resource templates](https://modelcontextprotocol.io/specification/2025-06-18/server/resources#resource-templates) through a practical example.
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io/specification/2025-06-18) 提示词通过将 AI 能力与结构化数据访问相结合来实现工作流自动化。本文通过一个实际示例演示了如何使用 MCP 的[提示词](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts)和[资源模板](https://modelcontextprotocol.io/specification/2025-06-18/server/resources#resource-templates)来构建自动化。
 
-This guide demonstrates how MCP prompts can automate repetitive workflows. Whether you're interested in the MCP ecosystem or simply want to leverage AI for workflow automation, you'll learn how to build practical automations through a concrete meal planning example. No prior MCP experience needed—we'll cover the fundamentals before diving into implementation.
+本指南演示了 MCP 提示词如何自动化重复性工作流。无论您是对 MCP 生态系统感兴趣，还是只是想利用 AI 进行工作流自动化，您都将通过一个具体的餐食规划示例学习如何构建实用的自动化。不需要事先了解 MCP——我们将在深入实现之前介绍基础知识。
 
-## The Problem: Time-Consuming Repetitive Tasks
+## 问题：耗时的重复性任务
 
-Everyone has a collection of repetitive tasks that eat away at their productive hours. Common examples include applying code review feedback, generating weekly reports, updating documentation, or creating boilerplate code. These tasks aren't complex—they follow predictable patterns—but they're cumbersome and time-consuming. [MCP prompts](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts) were designed to help automate this kind of work.
+每个人都有一些重复性任务，这些任务会占用他们的生产时间。常见示例包括应用代码审查反馈、生成每周报告、更新文档或创建样板代码。这些任务并不复杂——它们遵循可预测的模式——但它们繁琐且耗时。[MCP 提示词](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts)正是为了帮助自动化此类工作而设计的。
 
-MCP prompts offer more than command shortcuts. They're a primitive for building workflow automation that combines the flexibility of scripting with the intelligence of modern AI systems. This post explores how to build automations using MCP's prompt system, resource templates, and modular servers. I'll demonstrate these concepts through a meal planning automation I built, but the patterns apply broadly to any structured, repetitive workflow.
+MCP 提示词不仅仅是命令快捷方式。它们是构建工作流自动化的原语，将脚本的灵活性与现代 AI 系统的智能相结合。本文探讨了如何使用 MCP 的提示词系统、资源模板和模块化服务器来构建自动化。我将通过我构建的一个餐食规划自动化来演示这些概念，但这些模式广泛适用于任何结构化的重复性工作流。
 
-## Example: Automating Weekly Meal Planning
+## 示例：自动化每周餐食规划
 
-I needed to solve a recurring problem: planning weekly meals by cuisine to manage ingredients efficiently. The manual process involved selecting a cuisine, choosing dishes, listing ingredients, shopping, and organizing recipes—repetitive steps that took significant time each week.
+我需要解决一个反复出现的问题：按菜系规划每周餐食以高效管理食材。手动过程涉及选择菜系、选择菜肴、列出食材、购物和组织食谱——这些重复步骤每周都要花费大量时间。
 
-So I decided to use MCP! By automating these steps, I could reduce the entire workflow to selecting a cuisine and receiving a complete meal plan with shopping list. (Any client that supports MCP prompts should work!)
+所以我决定使用 MCP！通过自动化这些步骤，我可以将整个工作流简化为选择菜系并接收完整的餐食计划和购物清单。（任何支持 MCP 提示词的客户端都应该可以工作！）
 
-1. **Select a prompt**
+1. **选择提示词**
 
    <img
    src="/posts/images/prompts-list.png"
-   alt="MCP prompts list showing available automation commands"
+   alt="MCP 提示词列表显示可用的自动化命令"
    />
 
-2. **Select a cuisine from a dropdown**
+2. **从下拉菜单中选择菜系**
    <img
      src="/posts/images/prompts-suggestions.png"
-     alt="Dropdown showing cuisine suggestions as user types"
+     alt="下拉菜单显示用户输入时的菜系列表建议"
    />
-3. **Done!**
-   The system generates a meal plan, shopping list, and even prints the shopping list and recipes.
+3. **完成！**
+   系统生成餐食计划、购物清单，甚至打印购物清单和食谱。
 
 <img
     src="/posts/images/prompts-final-result.png"
-    alt="Final generated meal plan and shopping list output"
+    alt="最终生成的餐食计划和购物清单输出"
   />
 
-Here we are focuses primarily on the Recipe Server with its prompts and resources. You can find the [printing server example here](https://github.com/ihrpr/mcp-server-tiny-print) (it works with a specific thermal printer model, but you could easily swap it for email, Notion, or any other output method). The beauty of separate servers is that you can mix and match different capabilities.
+这里我们主要关注带有提示词和资源的食谱服务器。您可以在[这里找到打印服务器示例](https://github.com/ihrpr/mcp-server-tiny-print)（它适用于特定的热敏打印机型号，但您可以轻松将其替换为电子邮件、Notion 或任何其他输出方法）。独立服务器的美妙之处在于您可以混合搭配不同的能力。
 
-## Core Components
+## 核心组件
 
-Let's dive into the three components that make this automation possible: [prompts](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts), [resources](https://modelcontextprotocol.io/specification/2025-06-18/server/resources), and [completions](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/completion). I'll show you how each works conceptually, then we'll implement them together.
+让我们深入了解使这种自动化成为可能的三个组件：[提示词](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts)、[资源](https://modelcontextprotocol.io/specification/2025-06-18/server/resources)和[完成](https://modelcontextprotocol.io/specification/2025-06-18/server/utilities/completion)。我将展示每个组件的概念工作原理，然后我们一起实现它们。
 
 ### 1. Resource Templates
 
@@ -101,54 +101,54 @@ This works, but it's generic. The AI will create a meal plan based on general kn
 "Create a meal plan for a week using {cuisine} cuisine"
 ```
 
-Now users can specify Italian, Mexican, or any other cuisine. The prompt adapts to user input, but still relies on the AI's general knowledge about these cuisines.
+现在用户可以指定意大利菜、墨西哥菜或其他任何菜系。提示词会根据用户输入进行调整，但仍然依赖于 AI 对这些菜系的一般知识。
 
-**Including resources: Your data**
+**包含资源：您的数据**
 
-Prompts can include resources to add context data beyond simple text instructions. This is crucial when you need the AI to work with your specific context rather than general knowledge.
+提示词可以包含资源，以添加超出简单文本指令的上下文数据。当您需要 AI 使用您的特定上下文而不是一般知识时，这一点至关重要。
 
-In my meal planning example, I don't want generic recipes—I want the AI to use **my** collection of tested recipes that I know I like. Complex prompts make this possible by bundling prompt text with embedded resources.
+在我的餐食规划示例中，我不想要通用食谱——我希望 AI 使用**我**的经过测试的食谱收藏，这些是我知道我喜欢的食谱。复杂提示词通过将提示词文本与嵌入资源捆绑在一起使这成为可能。
 
-Here's how it works:
+工作原理如下：
 
-1. **User selects a prompt** with parameters (e.g., "plan-meals" with cuisine="italian")
-2. **Server returns** both instructional text AND resource references
-3. **Client decides how to handle resources** - Applications might choose to select a subset of data using embeddings or keyword search, or pass the raw data directly to the model
-4. **AI receives the context** and generates a response
+1. **用户选择带有参数的提示词**（例如，"plan-meals"，cuisine="italian"）
+2. **服务器返回**指令文本和资源引用
+3. **客户端决定如何处理资源** - 应用程序可能选择使用嵌入或关键词搜索选择数据子集，或直接将原始数据传递给模型
+4. **AI 接收上下文**并生成响应
 
-In my example, VS Code attached the entire resource to the prompt, which worked great for this use case. The AI had access to all my Italian recipes when planning an Italian week, ensuring it only suggested dishes I actually had recipes for.
+在我的示例中，VS Code 将整个资源附加到提示词，这对这个用例非常有效。AI 在规划意大利周时可以访问我所有的意大利食谱，确保它只建议我实际有食谱的菜肴。
 
-The key difference from simple prompts: instead of asking "Plan Italian meals" and getting generic suggestions, the AI works with your actual recipe collection, dietary preferences, and constraints.
+与简单提示词的关键区别：不是询问"规划意大利餐食"并获得通用建议，而是 AI 使用您实际的食谱收藏、饮食偏好和限制。
 
 <img
     src="/posts/images/prompts-rendered-prompt.png"
-    alt="VS Code showing the rendered prompt with attached recipe resources"
+    alt="VS Code 显示带有附加食谱资源的渲染提示词"
   />
 
-The recipe resources we've been using are **embedded resources** that have inline content from the server. According to the [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts#data-types), prompts can also include other data types.
+我们一直在使用的食谱资源是**嵌入资源**，它们具有来自服务器的内联内容。根据[MCP 规范](https://modelcontextprotocol.io/specification/2025-06-18/server/prompts#data-types)，提示词还可以包含其他数据类型。
 
-This enables advanced use cases beyond our text-based recipes, like design review prompts with screenshots or voice transcription services.
+这启用了超出我们基于文本的食谱的高级用例，例如带有截图的设计审查提示词或语音转录服务。
 
-## Building the Recipe Server
+## 构建食谱服务器
 
-Let's implement a complete MCP server that brings together all the concepts we've discussed. We'll start with the server setup and then implement each capability.
+让我们实现一个完整的 MCP 服务器，将我们讨论的所有概念结合起来。我们将从服务器设置开始，然后实现每个功能。
 
-### Prerequisites
+### 先决条件
 
-Before diving into the code, make sure you have:
+在深入代码之前，请确保您有：
 
-1. **Node.js** (v18 or higher) and npm installed
-2. **MCP SDK** installed:
+1. **Node.js**（v18 或更高版本）和 npm 已安装
+2. **MCP SDK** 已安装：
    ```bash
    npm install @modelcontextprotocol/sdk
    ```
-3. **An MCP-compatible client with prompt and resource support**,like VS Code with the MCP extension
+3. **支持提示词和资源的 MCP 兼容客户端**，如带有 MCP 扩展的 VS Code
 
-For this tutorial, I'll use the TypeScript SDK, but MCP also supports Python and other languages.
+在本教程中，我将使用 TypeScript SDK，但 MCP 也支持 Python 和其他语言。
 
-### Server Setup and Capabilities
+### 服务器设置和功能
 
-First, let's create our MCP server:
+首先，让我们创建我们的 MCP 服务器：
 
 ```typescript
 const server = new McpServer({
@@ -167,9 +167,9 @@ main().catch((error) => {
 });
 ```
 
-### Implementing Resources
+### 实现资源
 
-Next, let's register a resource template with completions.
+接下来，让我们注册一个带有完成的资源模板。
 
 ```typescript
 server.registerResource(
@@ -207,9 +207,9 @@ server.registerResource(
 );
 ```
 
-### Implementing Prompts
+### 实现提示词
 
-Finally, let's register the prompt, which also has completions:
+最后，让我们注册提示词，它也有完成：
 
 ```typescript
 server.registerPrompt(
@@ -265,43 +265,43 @@ Focus on ingredient overlap between recipes to reduce food waste.`,
 );
 ```
 
-## Running It Yourself
+## 自己运行
 
-The [full code for the recipe server is available here](https://github.com/ihrpr/mcp-server-fav-recipes).
+[食谱服务器的完整代码在这里](https://github.com/ihrpr/mcp-server-fav-recipes)。
 
-Follow VS Code's [documentation to set up the server](https://code.visualstudio.com/docs/copilot/chat/mcp-servers). Once a server is set up in VS Code, you can see its status, debug what's happening, and iterate quickly on your automations.
+按照 VS Code 的[文档设置服务器](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)。一旦在 VS Code 中设置了服务器，您就可以查看其状态、调试正在发生的事情，并在您的自动化上快速迭代。
 
-After the server is set up in VS Code, type "/" in chat and select the prompt.
+在 VS Code 中设置服务器后，在聊天中输入 "/" 并选择提示词。
 
 <img
     src="/posts/images/prompts-list.png"
-    alt="MCP prompts list showing available automation commands"
+    alt="MCP 提示词列表显示可用的自动化命令"
  />
 
-## Extending Your Automations
+## 扩展您的自动化
 
-MCP prompts open up exciting automation possibilities:
+MCP 提示词开启了激动人心的自动化可能性：
 
-- **Prompt Chains**: Execute multiple prompts in sequence (plan meals → generate shopping list → place grocery order)
-- **Dynamic Prompts**: Adapt based on available resources or time of year
-- **Cross-Server Workflows**: Coordinate multiple MCP servers for complex automations
-- **External Triggers**: Activate prompts via webhooks or schedules
+- **提示词链**：按顺序执行多个提示词（规划餐食 → 生成购物清单 → 下单）
+- **动态提示词**：根据可用资源或季节进行调整
+- **跨服务器工作流**：协调多个 MCP 服务器进行复杂自动化
+- **外部触发器**：通过 webhook 或计划激活提示词
 
-The patterns demonstrated in meal planning apply to many domains:
+在餐食规划中演示的模式适用于许多领域：
 
-- Documentation generation that knows your codebase
-- Report creation with access to your data sources
-- Development workflows that understand your project structure
-- Customer support automations with full context
+- 了解您代码库的文档生成
+- 访问您数据源的报告创建
+- 理解您项目结构的开发工作流
+- 具有完整上下文的客户支持自动化
 
-**Key takeaways:**
+**关键要点：**
 
-- MCP prompts can include dynamic resources, giving AI full context for tasks
-- Resource templates enable scalable content serving without duplication
-- Modular server architecture lets you mix and match capabilities
+- MCP 提示词可以包含动态资源，为任务提供 AI 完整上下文
+- 资源模板启用可扩展的内容服务而无需重复
+- 模块化服务器架构让您可以混合搭配功能
 
-## Wrapping Up
+## 总结
 
-This meal planning automation started as a simple desire to avoid rewriting shopping lists every week. It evolved into a complete system that handles meal planning, shopping lists, and recipe printing with just a few clicks.
+这个餐食规划自动化始于一个简单的愿望：避免每周重写购物清单。它演变为一个完整的系统，只需几次点击即可处理餐食规划、购物清单和食谱打印。
 
-MCP prompts provide practical tools to automate repetitive tasks. The modular architecture means you can start small—perhaps just automating one part of your workflow—and expand as needed. Whether you're automating documentation, reports, or meal planning, the patterns remain the same: identify repetitive tasks, build focused automations, and let the system handle the tedious parts.
+MCP 提示词提供了自动化重复性任务的实用工具。模块化架构意味着您可以从小开始——也许只是自动化您工作流的一部分——并根据需要扩展。无论您是在自动化文档、报告还是餐食规划，模式都是一样的：识别重复性任务，构建专注的自动化，让系统处理繁琐的部分。

@@ -1,109 +1,109 @@
 ---
-title: "Update on the Next MCP Protocol Release"
+title: "下一个 MCP 协议版本的更新"
 date: 2025-09-26T10:00:00-08:00
 draft: false
 tags: ["mcp", "protocol", "roadmap", "community"]
 author: "David Soria Parra"
-description: "An update on the timeline and priorities for the next Model Context Protocol specification version"
+description: "关于 Model Context Protocol 规范下一个版本的时间表和优先级的更新"
 ---
 
-## Release Timeline
+## 发布时间表
 
-The next version of the Model Context Protocol specification will be released on **November 25th, 2025**, with a release candidate (RC) available on **November 11th, 2025**.
+Model Context Protocol 规范的下一个版本将于 **2025 年 11 月 25 日** 发布，发布候选版本 (RC) 将于 **2025 年 11 月 11 日** 提供。
 
-We're building in a 14-day RC validation window so client implementors and SDK maintainers can thoroughly test the protocol changes. This approach gives us the focused time we need to deliver critical improvements while applying our [new governance model](https://modelcontextprotocol.io/community/governance) to the process.
+我们构建了一个 14 天的 RC 验证窗口，以便客户端实现者和 SDK 维护者可以彻底测试协议更改。这种方法为我们提供了交付关键改进所需的专注时间，同时将我们的[新治理模式](https://modelcontextprotocol.io/community/governance)应用于流程。
 
-## Summer Progress
+## 夏季进展
 
-Our last spec was released on June 18, 2025, and focused on structured tool outputs, OAuth-based authorization, elicitation for server-initiated user interactions, and improved security best practices.
+我们上一个规范于 2025 年 6 月 18 日发布，专注于结构化工具输出、基于 OAuth 的授权、服务器发起的用户交互的引出，以及改进的安全最佳实践。
 
-Since then, we’ve focused on establishing additional foundations for the MCP ecosystem:
+从那时起，我们专注于为 MCP 生态系统建立额外的基礎：
 
-### Formal Governance Structures
+### 正式治理结构
 
-We established a [formal governance model for MCP](https://modelcontextprotocol.io/community/governance), including defined roles and decision-making mechanisms. We also developed the [Specification Enhancement Proposal (SEP)](https://modelcontextprotocol.io/community/sep-guidelines) process to provide clear guidelines for contributing specification changes.
+我们建立了 MCP 的[正式治理模式](https://modelcontextprotocol.io/community/governance)，包括定义的角色和决策机制。我们还开发了[规范增强提案 (SEP)](https://modelcontextprotocol.io/community/sep-guidelines) 流程，为贡献规范更改提供清晰的指南。
 
-Our goal is transparency—making decision-making procedures clear and accessible to everyone. Like any new system serving a fast-evolving community, our governance model is still finding its footing. We're actively refining it as both the protocol and community continue to grow.
+我们的目标是透明——使决策程序对每个人都清晰和可访问。像任何服务于快速演变社区的新系统一样，我们的治理模式仍在寻找立足点。随着协议和社区的持续增长，我们正在积极完善它。
 
-### Working Groups
+### 工作组
 
-We've launched [Working Groups and Interest Groups](https://modelcontextprotocol.io/community/working-interest-groups) to foster community collaboration. These groups serve multiple purposes:
+我们启动了[工作组和兴趣组](https://modelcontextprotocol.io/community/working-interest-groups) 以促进社区协作。这些组服务于多个目的：
 
-- Provide clear entry points for new contributors
-- Empower community members to lead initiatives in their areas of expertise
-- Distribute ownership across the ecosystem rather than concentrating it among core maintainers
+- 为新贡献者提供清晰的入口点
+- 授权社区成员在他们的专业领域领导倡议
+- 在生态系统中分配所有权，而不是集中在核心维护者中
 
-We're developing governance structures that will grant these groups greater autonomy in decision-making and implementation. This distributed approach ensures the protocol can grow to meet community needs while maintaining quality and consistency across different domains.
+我们正在开发治理结构，这些结构将授予这些组更大的决策和实施自主权。这种分布式方法确保协议能够增长以满足社区需求，同时在不同领域保持质量和一致性。
 
-### Registry Development
+### 注册表开发
 
-In September, we [launched the MCP Registry preview](https://blog.modelcontextprotocol.io/posts/2025-09-08-mcp-registry-preview/)—an open catalog and API for indexing and discovery of MCP servers. The Registry serves as the single source of truth for available MCP servers, supporting both public and private sub-registries that organizations can customize for their specific needs.
+9 月，我们[推出了 MCP 注册表预览](https://blog.modelcontextprotocol.io/posts/2025-09-08-mcp-registry-preview/)——一个用于索引和发现 MCP 服务器的开放目录和 API。注册表作为可用 MCP 服务器的单一真相来源，支持组织可以为他们的特定需求定制的公共和私有子注册表。
 
-Building the MCP Registry has been a true community effort. Any MCP client can consume registry content via the native API or through third-party registry aggregators, making it easier for users to discover and integrate MCP servers into their AI workflows.
+构建 MCP 注册表是一个真正的社区努力。任何 MCP 客户端都可以通过原生 API 或第三方注册表聚合器消费注册表内容，使用户更容易发现和集成 MCP 服务器到他们的 AI 工作流中。
 
-## Priority Areas for the Next Release
+## 下一个版本的优先领域
 
-With governance and infrastructure foundations in place, we're focusing on five key protocol improvements identified by our working groups.
+随着治理和基础设施基础到位，我们专注于工作组确定的五个关键协议改进。
 
-### Asynchronous Operations
+### 异步操作
 
-Currently, MCP is built around mostly synchronous operations—when you call a tool, everything stops and waits for it to finish. That works great for quick tasks, but what about operations that take minutes or hours?
+目前，MCP 围绕主要是同步操作构建——当您调用工具时，一切都会停止并等待它完成。这对快速任务很有效，但对于需要几分钟或几小时的操作呢？
 
-The Agents Working Group is adding async support, allowing servers to kick off long-running tasks while clients can check back later for results. You can follow the progress in [SEP-1391](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1391).
+代理工作组正在添加异步支持，允许服务器启动长时间运行的任务，而客户端可以稍后检查结果。您可以在 [SEP-1391](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1391) 中关注进展。
 
-### Statelessness and Scalability
+### 无状态性和可扩展性
 
-As organizations deploy MCP servers at enterprise scale, we're seeing new requirements emerge. Current implementations often need to remember things between requests, which makes horizontal scaling across multiple server instances challenging.
+随着组织在企业规模部署 MCP 服务器，我们看到新的需求出现。当前实现通常需要在请求之间记住事物，这使得跨多个服务器实例的水平扩展具有挑战性。
 
-While [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) provides some stateless support, pain points remain around server startup and session handling. The Transport Working Group is smoothing out these rough edges, making it easier to run MCP servers in production while keeping simple upgrade paths for teams who want more sophisticated stateful features.
+虽然 [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) 提供了一些无状态支持，但在服务器启动和会话处理方面仍然存在痛点。传输工作组正在平滑这些粗糙边缘，使在生产中运行 MCP 服务器更容易，同时为想要更复杂的有状态功能的团队保持简单的升级路径。
 
-### Server Identity
+### 服务器身份
 
-Today, if you want to know what an MCP server can do, you have to connect to it first. This makes it difficult for clients to browse available servers or for systems like our registry to automatically catalog capabilities.
+今天，如果您想知道 MCP 服务器能做什么，您必须首先连接到它。这使得客户端难以浏览可用服务器，或像我们的注册表这样的系统难以自动编目功能。
 
-We're solving this by letting servers advertise themselves through [`.well-known` URLs](https://en.wikipedia.org/wiki/Well-known_URI)—an established standard for providing metadata. Think of it as a server's business card that anyone can read without having to knock on the door first. This will make discovery much more intuitive for every MCP consumer.
+我们通过让服务器通过 [`.well-known` URLs](https://en.wikipedia.org/wiki/Well-known_URI) 广告自己来解决这个问题——这是一个为提供元数据而建立的标准。将其视为服务器的名片，任何人都可以在不敲门的情况下阅读。这将使每个 MCP 消费者的发现变得更加直观。
 
-### Official Extensions
+### 官方扩展
 
-As MCP has grown, we've noticed patterns emerging for specific industries and use cases—valuable implementations that don't necessarily belong in the core protocol specification.
+随着 MCP 的增长，我们注意到特定行业和用例的模式正在出现——有价值的实现，不一定属于核心协议规范。
 
-Rather than leaving everyone to reinvent the wheel, we're officially recognizing and documenting the most popular protocol extensions. This curated collection of proven patterns will give developers building for specialized domains like healthcare, finance, or education a solid starting point instead of building every custom integration from scratch.
+与其让每个人重新发明轮子，我们正式认可和记录最受欢迎的协议扩展。这个经过验证的模式集合将为在医疗保健、金融或教育等专业领域构建的开发者提供坚实起点，而不是从头构建每个自定义集成。
 
-### SDK Support Standardization
+### SDK 支持标准化
 
-Choosing an MCP SDK today can be challenging—it's hard to gauge the level of support or spec compliance you'll get. Some SDKs are lightning-fast with updates, while others might lag behind feature-wise.
+今天选择 MCP SDK 可能具有挑战性——很难衡量您将获得的规范合规性水平或支持水平。有些 SDK 更新速度极快，而其他可能在功能方面落后。
 
-We're introducing a clear tiering system for SDKs. You'll know exactly what you're signing up for before committing to a dependency, based on factors like specification compliance speed, maintenance responsiveness, and feature completeness.
+我们正在引入一个清晰的 SDK 分层系统。在提交依赖之前，您将确切知道您在注册什么，基于规范合规速度、维护响应性和功能完整性等因素。
 
-## Call for Contributors
+## 贡献者呼吁
 
-MCP is only as strong as the community behind it. Whether you're an individual developer passionate about building SDKs or a company looking to invest in the ecosystem, we need your help in several key areas.
+MCP 只有在背后的社区一样强大。无论您是热衷于构建 SDK 的个人开发者，还是希望投资生态系统的公司，我们在几个关键领域需要您的帮助。
 
-### SDK Maintenance
+### SDK 维护
 
-- [**TypeScript SDK**](https://github.com/modelcontextprotocol/typescript-sdk) - Needs additional maintainers for feature development and bug fixes
-- [**Swift SDK**](https://github.com/modelcontextprotocol/swift-sdk) - Requires attention for Apple ecosystem support
-- [Other language SDKs](https://modelcontextprotocol.io/docs/sdk) welcome continued contributions
+- [**TypeScript SDK**](https://github.com/modelcontextprotocol/typescript-sdk) - 需要额外的维护者进行功能开发和错误修复
+- [**Swift SDK**](https://github.com/modelcontextprotocol/swift-sdk) - 需要关注 Apple 生态系统支持
+- [其他语言 SDK](https://modelcontextprotocol.io/docs/sdk) 欢迎持续贡献
 
-### Tooling
+### 工具
 
-- [**Inspector**](https://github.com/modelcontextprotocol/inspector) - Development and maintenance of debugging tools for MCP server developers
-- [**Registry**](https://github.com/modelcontextprotocol/registry) - Backend API and CLI development; **Go expertise would be particularly welcome**
+- [**Inspector**](https://github.com/modelcontextprotocol/inspector) - 为 MCP 服务器开发者开发和维护调试工具
+- [**Registry**](https://github.com/modelcontextprotocol/registry) - 后端 API 和 CLI 开发；**特别欢迎 Go 专业知识**
 
-## Input from Client Developers
+## 来自客户端开发者的输入
 
-We talk a lot about MCP servers, but clients are equally important—they're the bridge connecting users to the entire MCP ecosystem. If you're building an MCP client, you're seeing the protocol from a unique angle, and we need that perspective embedded in the protocol design.
+我们经常谈论 MCP 服务器，但客户端同样重要——它们是将用户连接到整个 MCP 生态系统的桥梁。如果您正在构建 MCP 客户端，您正在从独特的角度看待协议，我们需要将这种视角嵌入协议设计中。
 
-Your real-world experience with implementation challenges, performance bottlenecks, and user needs directly shapes where the protocol should go next. Whether it's feedback on existing capabilities or ideas for streamlining the developer experience, we want to hear from you.
+您在实现挑战、性能瓶颈和用户需求方面的实际经验直接塑造了协议下一步的方向。无论是关于现有功能的反馈，还是关于简化开发者体验的想法，我们都想听到您的声音。
 
-Join us in the `#client-implementors` working group channel in the [MCP Discord](https://modelcontextprotocol.io/community/communication).
+加入我们在 [MCP Discord](https://modelcontextprotocol.io/community/communication) 中 `#client-implementors` 工作组频道的讨论。
 
-## Looking Ahead
+## 前瞻
 
-With governance structures and working groups in place, we're better positioned to tackle major protocol improvements efficiently while ensuring everyone has a voice in the process. The foundational work we've done this summer gives us a solid base to build from.
+随着治理结构和工作组到位，我们更好地定位于高效处理主要协议改进，同时确保每个人在过程中都有发言权。我们这个夏天完成的基础工作为我们提供了构建的坚实基础。
 
-The improvements coming in November—async operations, better scalability, server discovery, and standardized extensions—will help MCP become a stronger backbone for production AI integrations. But we can't do it alone.
+11 月即将推出的改进——异步操作、更好的可扩展性、服务器发现和标准化扩展——将帮助 MCP 成为生产 AI 集成的更强大骨干。但我们无法独自完成。
 
-MCP's strength has always been that it's an **open protocol built by the community, for the community**. We're excited to keep building it together.
+MCP 的力量一直是它是**由社区为社区构建的开放协议**。我们很高兴继续一起构建它。
 
-Thank you for your continued support, and we look forward to sharing more soon.
+感谢您持续的支持，我们期待很快分享更多。

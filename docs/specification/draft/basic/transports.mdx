@@ -148,16 +148,11 @@ servers which want to establish stateful sessions:
      `Mcp-Session-Id` header (other than initialization) with HTTP 400 Bad Request.
 3. The server **MAY** terminate the session at any time, after which it **MUST** respond
    to requests containing that session ID with HTTP 404 Not Found.
-4. When a client receives HTTP 404 in response to a request containing an
-   `Mcp-Session-Id`, it **MUST** start a new session by sending a new `InitializeRequest`
-   without a session ID attached.
-5. Clients that no longer need a particular session (e.g., because the user is leaving
-   the client application) **SHOULD** send an HTTP DELETE to the MCP endpoint with the
-   `Mcp-Session-Id` header, to explicitly terminate the session.
-   - The server **MAY** respond to this request with HTTP 405 Method Not Allowed,
-     indicating that the server does not allow clients to terminate sessions.
+4. 当客户端收到对包含`Mcp-Session-Id`的请求的HTTP 404响应时，它**必须**通过发送不附加会话ID的新`InitializeRequest`来启动新会话。
+5. 不再需要特定会话的客户端（例如，因为用户正在离开客户端应用程序）**应该**使用`Mcp-Session-Id`头向MCP端点发送HTTP DELETE，以明确终止会话。
+   - 服务器**可以**以HTTP 405 Method Not Allowed响应此请求，表示服务器不允许客户端终止会话。
 
-### Sequence Diagram
+### 时序图
 
 ```mermaid
 sequenceDiagram
@@ -198,61 +193,38 @@ sequenceDiagram
 
 ```
 
-### Protocol Version Header
+### 协议版本头
 
-If using HTTP, the client **MUST** include the `MCP-Protocol-Version:
-<protocol-version>` HTTP header on all subsequent requests to the MCP
-server, allowing the MCP server to respond based on the MCP protocol version.
+如果使用HTTP，客户端**必须**在所有后续对MCP服务器的请求中包含`MCP-Protocol-Version: <protocol-version>` HTTP头，允许MCP服务器基于MCP协议版本进行响应。
 
-For example: `MCP-Protocol-Version: 2025-06-18`
+例如：`MCP-Protocol-Version: 2025-06-18`
 
-The protocol version sent by the client **SHOULD** be the one [negotiated during
-initialization](/specification/draft/basic/lifecycle#version-negotiation).
+客户端发送的协议版本**应该**是在[初始化期间协商的](/specification/draft/basic/lifecycle#version-negotiation)版本。
 
-For backwards compatibility, if the server does _not_ receive an `MCP-Protocol-Version`
-header, and has no other way to identify the version - for example, by relying on the
-protocol version negotiated during initialization - the server **SHOULD** assume protocol
-version `2025-03-26`.
+为了向后兼容，如果服务器没有收到`MCP-Protocol-Version`头，并且没有其他方式识别版本 - 例如，通过依赖在初始化期间协商的协议版本 - 服务器**应该**假设协议版本为`2025-03-26`。
 
-If the server receives a request with an invalid or unsupported
-`MCP-Protocol-Version`, it **MUST** respond with `400 Bad Request`.
+如果服务器收到带有无效或不支持的`MCP-Protocol-Version`的请求，它**必须**以`400 Bad Request`响应。
 
-### Backwards Compatibility
+### 向后兼容性
 
-Clients and servers can maintain backwards compatibility with the deprecated [HTTP+SSE
-transport](/specification/2024-11-05/basic/transports#http-with-sse) (from
-protocol version 2024-11-05) as follows:
+客户端和服务器可以通过以下方式保持与已弃用的[HTTP+SSE传输](/specification/2024-11-05/basic/transports#http-with-sse)（来自协议版本2024-11-05）的向后兼容性：
 
-**Servers** wanting to support older clients should:
+**希望支持旧客户端的服务器应该：**
 
-- Continue to host both the SSE and POST endpoints of the old transport, alongside the
-  new "MCP endpoint" defined for the Streamable HTTP transport.
-  - It is also possible to combine the old POST endpoint and the new MCP endpoint, but
-    this may introduce unneeded complexity.
+- 继续托管旧传输的SSE和POST端点，以及为可流式HTTP传输定义的新"MCP端点"。
+  - 也可以组合旧的POST端点和新MCP端点，但这可能会引入不必要的复杂性。
 
-**Clients** wanting to support older servers should:
+**希望支持旧服务器的客户端应该：**
 
-1. Accept an MCP server URL from the user, which may point to either a server using the
-   old transport or the new transport.
-2. Attempt to POST an `InitializeRequest` to the server URL, with an `Accept` header as
-   defined above:
-   - If it succeeds, the client can assume this is a server supporting the new Streamable
-     HTTP transport.
-   - If it fails with an HTTP 4xx status code (e.g., 405 Method Not Allowed or 404 Not
-     Found):
-     - Issue a GET request to the server URL, expecting that this will open an SSE stream
-       and return an `endpoint` event as the first event.
-     - When the `endpoint` event arrives, the client can assume this is a server running
-       the old HTTP+SSE transport, and should use that transport for all subsequent
-       communication.
+1. 从用户接受MCP服务器URL，该URL可能指向使用旧传输或新传输的服务器。
+2. 尝试使用上面定义的`Accept`头向服务器URL POST `InitializeRequest`：
+   - 如果成功，客户端可以假设这是一个支持新可流式HTTP传输的服务器。
+   - 如果它以HTTP 4xx状态码失败（例如，405 Method Not Allowed或404 Not Found）：
+     - 向服务器URL发出GET请求，期望这将打开SSE流并返回`endpoint`事件作为第一个事件。
+     - 当`endpoint`事件到达时，客户端可以假设这是一个运行旧HTTP+SSE传输的服务器，并应该为所有后续通信使用该传输。
 
-## Custom Transports
+## 自定义传输
 
-Clients and servers **MAY** implement additional custom transport mechanisms to suit
-their specific needs. The protocol is transport-agnostic and can be implemented over any
-communication channel that supports bidirectional message exchange.
+客户端和服务器**可以**实施额外的自定义传输机制以满足其特定需求。该协议与传输无关，可以在任何支持双向消息交换的通信通道上实施。
 
-Implementers who choose to support custom transports **MUST** ensure they preserve the
-JSON-RPC message format and lifecycle requirements defined by MCP. Custom transports
-**SHOULD** document their specific connection establishment and message exchange patterns
-to aid interoperability.
+选择支持自定义传输的实施者**必须**确保它们保留MCP定义的JSON-RPC消息格式和生命周期要求。自定义传输**应该**记录其特定的连接建立和消息交换模式，以帮助互操作性。

@@ -1,25 +1,25 @@
 +++
 date = '2025-08-22T10:00:00Z'
 draft = false
-title = 'Evolving OAuth Client Registration in the Model Context Protocol'
+title = 'Model Context Protocol 中 OAuth 客户端注册的演变'
 author = 'Paul Carleton (Core Maintainer)'
 tags = ['security', 'authorization']
 +++
 
-The Model Context Protocol (MCP) has adopted OAuth 2.1 as the foundation for its authorization framework. A key part of the authorization flow that MCP is particularly reliant on is **client registration**.
+Model Context Protocol (MCP) 已采用 OAuth 2.1 作为其授权框架的基础。授权流程中 MCP 特别依赖的关键部分是**客户端注册**。
 
-This is especially important in a world where clients and servers don't have a pre-existing relationship - we can't assume that we will always know which MCP clients will connect to which MCP servers. This design highlights two challenges that need to be addressed:
+这在客户端和服务器没有预先存在的关系的世界中尤其重要——我们不能假设我们总是知道哪些 MCP 客户端将连接到哪些 MCP 服务器。这种设计突显了两个需要解决的挑战：
 
-- Operational issues with managing client IDs via [Dynamic Client Registration](https://datatracker.ietf.org/doc/html/rfc7591) (DCR)
-- Preventing client impersonation
+- 通过 [动态客户端注册](https://datatracker.ietf.org/doc/html/rfc7591) (DCR) 管理客户端 ID 的操作问题
+- 防止客户端冒充
 
-If you're already familiar with OAuth and the current state of client registration in MCP, skip to [Two Distinct Challenges in MCP Client Registration](#two-distinct-challenges-in-mcp-client-registration).
+如果您已经熟悉 OAuth 以及 MCP 中客户端注册的当前状态，请跳到 [MCP 客户端注册中的两个不同挑战](#two-distinct-challenges-in-mcp-client-registration)。
 
-## Background on OAuth
+## OAuth 背景
 
-A protected MCP server that implements OAuth 2.1 should allow a user to grant a client access to itself and prevent attempts to trick the user into granting access to a client they didn't intend to use via phishing.
+实现 OAuth 2.1 的受保护 MCP 服务器应该允许用户授予客户端访问自己的权限，并防止通过钓鱼攻击诱骗用户授予他们不打算使用的客户端访问权限。
 
-The authorization flow can be best described by looking at this sequence diagram:
+授权流程可以通过查看这个序列图来最好地描述：
 
 ```mermaid
 sequenceDiagram
@@ -39,74 +39,74 @@ sequenceDiagram
    Resource-->>Client: Protected resource
 ```
 
-This flow requires a few steps to be performed to acquire an access token:
+这个流程需要执行几个步骤来获取访问令牌：
 
-1. The client directs the user to an authorization UI provided by the authorization server
-2. The authorization server displays a consent screen to the user
-3. User approves client access and the authorization server redirects the user back to the client with an access code
-4. Client exchanges the access code for a set of tokens, which are cached locally
-5. Client uses the access token to access the MCP server
+1. 客户端将用户定向到授权服务器提供的授权 UI
+2. 授权服务器向用户显示同意屏幕
+3. 用户批准客户端访问，授权服务器将用户重定向回客户端并附带授权代码
+4. 客户端将授权代码交换为一组令牌，这些令牌在本地缓存
+5. 客户端使用访问令牌访问 MCP 服务器
 
-To be able to initiate this flow, however, the authorization server first needs some basic information about the client that is kicking off the authorization process:
+然而，要能够启动这个流程，授权服务器首先需要一些关于启动授权流程的客户端的基本信息：
 
-1. **Client name**: Human readable text to display in the consent screen to help the user decide whether they want to grant access.
-2. **Redirect URL**: The destination to send the authorization code back to if the user consents.
+1. **客户端名称**：在同意屏幕中显示的可读文本，帮助用户决定是否要授予访问权限。
+2. **重定向 URL**：如果用户同意，将授权代码发送回的目的地。
 
-In order to prevent a malicious client from tricking a user into granting access they didn't intend to grant, the authorization server must be able to trust the client information it has.
+为了防止恶意客户端诱骗用户授予他们不打算授予的访问权限，授权服务器必须能够信任它拥有的客户端信息。
 
-For example, a malicious client could claim to be `Claude Desktop` on the consent screen while actually being owned by someone not affiliated with Claude Desktop developers. Seeing the client information on the consent screen, users might grant access thinking they're authorizing the legitimate Claude Desktop, not realizing that some malicious client now has access to their account.
+例如，恶意客户端可能在同意屏幕上声称是 `Claude Desktop`，而实际上由与 Claude Desktop 开发者无关的人拥有。看到同意屏幕上的客户端信息，用户可能会授予访问权限，认为他们正在授权合法的 Claude Desktop，而没有意识到某个恶意客户端现在可以访问他们的账户。
 
-## Improving Client Registration in MCP
+## 改进 MCP 中的客户端注册
 
-For MCP users, a common pattern is to connect to an MCP server by using its URL directly in an MCP client.
+对于 MCP 用户，一个常见模式是通过在 MCP 客户端中直接使用其 URL 来连接到 MCP 服务器。
 
-This goes against the typical OAuth authorization pattern because the user is selecting the resource server to connect to rather than the client developer. This problem is compounded by the fact that there is an unbounded number of authorization servers that an MCP server may use, meaning that clients need to be able to complete the authorization flow regardless of the provider used.
+这与典型的 OAuth 授权模式相反，因为用户正在选择要连接的资源服务器而不是客户端开发者。这个问题因 MCP 服务器可能使用的授权服务器数量不受限制而加剧，这意味着客户端需要能够完成授权流程，无论使用哪个提供商。
 
-Some client developers have implemented pre-registration with a select few authorization servers. In this scenario, the client doesn't need to rely on DCR when it detects an authorization server it knows. However, this is a solution that doesn't scale given the breadth of the MCP ecosystem - it's impossible to have every client be registered with every authorization server there is.
-To mitigate this challenge, we set out to outline some of the goals that we wanted to achieve with improving the client registration experience:
+一些客户端开发者已经实现了与少数授权服务器的预注册。在这种情况下，当客户端检测到它知道的授权服务器时，它不需要依赖 DCR。然而，这是一个在 MCP 生态系统的广度下无法扩展的解决方案——让每个客户端都注册到每个授权服务器是不可能的。
+为了缓解这个挑战，我们着手概述我们想要通过改进客户端注册体验实现的一些目标：
 
-1. **Clients**: Client developers don't need to implement pre-registration and distribute a client ID for each authorization server MCP servers might be using.
-2. **Users**: Users don't need to go through a pre-registration process themselves and manually specify a client ID for every MCP server they connect to.
-3. **Authorization servers**:
+1. **客户端**：客户端开发者不需要为 MCP 服务器可能使用的每个授权服务器实现预注册和分发客户端 ID。
+2. **用户**：用户不需要自己经历预注册过程，并为他们连接的每个 MCP 服务器手动指定客户端 ID。
+3. **授权服务器**：
 
-- **Trust in Metadata**: Authorization servers have a way to trust the metadata they associate with a client, such as name and redirect URL.
-- **Single Client ID per App**: Authorization servers can have a single client ID per client for governance and management purposes
-- **Selective Allow/Deny**: Authorization servers can selectively allow or deny clients based on their policies.
-- **Database Management**: Authorization servers do not need to handle an unbounded database or expiration flows for every new client registration.
+- **对元数据的信任**：授权服务器有办法信任它们与客户端关联的元数据，如名称和重定向 URL。
+- **每个应用的单个客户端 ID**：授权服务器可以为治理和管理目的拥有每个客户端的单个客户端 ID
+- **选择性允许/拒绝**：授权服务器可以根据其策略选择性允许或拒绝客户端。
+- **数据库管理**：授权服务器不需要为每个新客户端注册处理不受限制的数据库或过期流程。
 
-Currently, none of our existing client registration approaches satisfy all of these requirements. Pre-registration requires too much effort in a highly variable setting (unbounded number of clients connecting to unbounded number of servers), while DCR reduces effort but creates operational issues that a lot of the authorization servers are not ready to tackle yet.
+目前，我们现有的客户端注册方法都没有满足所有这些要求。预注册在高度可变的环境中需要太多努力（连接到不受限制数量服务器的不受限制数量客户端），而 DCR 减少了努力但创建了许多授权服务器尚未准备好处理的运营问题。
 
-## Two Distinct Challenges in MCP Client Registration
+## MCP 客户端注册中的两个不同挑战
 
-After extensive discussion with MCP server implementers, we've identified that a few competing solutions to the registration problem were addressing two distinct issues:
+在与 MCP 服务器实现者进行广泛讨论后，我们发现一些针对注册问题的竞争解决方案正在解决两个不同的问题：
 
-1. **Operational limitations** of Dynamic Client Registration in open environments
-2. **Client identity and impersonation** risks across different deployment scenarios
+1. **开放环境中动态客户端注册的操作限制**
+2. **不同部署场景中的客户端身份和冒充风险**
 
-## **Challenge 1: Operational Limitations of Dynamic Client Registration**
+## **挑战 1：动态客户端注册的操作限制**
 
-### **The DCR Model Mismatch**
+### **DCR 模型不匹配**
 
-The DCR design takes the pre-registration pattern available in modern OAuth-based authorization servers and makes it available via an API. In fully open environments like MCP, DCR really puts the spotlight on a few operational challenges that an open registration endpoint introduces:
+DCR 设计采用现代基于 OAuth 的授权服务器中可用的预注册模式，并通过 API 使其可用。在像 MCP 这样的完全开放环境中，DCR 真的突显了开放注册端点引入的一些运营挑战：
 
-**For authorization servers:**
+**对于授权服务器：**
 
-- **Unbounded database growth**: Every time a user connects a client to an MCP server, a new registration is created with the authorization server unless the client already has one. Registrations are also not portable, so using Claude Desktop on your Windows machine, and then jumping to Claude Desktop on macOS will create two distinct client registrations.
-- **Client expiry "black hole"**: There's no way to tell a client that its ID is invalid without creating an open redirect vulnerability. Clients have to implement their own heuristics for client ID management.
-- **Per-instance confusion**: Each client instance typically gets its own client ID even when using the same application, but on different machines or across different users. From an auditing perspective, an authorization server administrator may see hundreds (if not thousands) of records for the same application without any rhyme or reason.
-- **Denial-of-Service vulnerability**: An unauthenticated `/register` endpoint writes to a database within the authorization server, meaning that tenant admins now need to worry about rate limiting or policy controls (e.g., hosts allowed to register clients).
+- **不受限制的数据库增长**：每次用户将客户端连接到 MCP 服务器时，除非客户端已经有一个，否则会在授权服务器中创建一个新注册。注册也不可移植，所以在 Windows 机器上使用 Claude Desktop，然后跳转到 macOS 上的 Claude Desktop 将创建两个不同的客户端注册。
+- **客户端过期"黑洞"**：没有办法在不创建开放重定向漏洞的情况下告诉客户端其 ID 无效。客户端必须为客户端 ID 管理实现自己的启发式方法。
+- **每个实例混淆**：即使使用相同应用程序，每个客户端实例通常也会获得自己的客户端 ID，但在不同机器或跨不同用户。从审计角度来看，授权服务器管理员可能会看到数百（如果不是数千）个相同应用程序的记录，而没有任何韵律或理由。
+- **拒绝服务漏洞**：未经身份验证的 `/register` 端点写入授权服务器内的数据库，这意味着租户管理员现在需要担心速率限制或策略控制（例如，允许注册客户端的主机）。
 
-**For clients:**
+**对于客户端：**
 
-- **Extra overhead**: Managing registration state and another secret beyond access/refresh tokens
-- **No validity checking**: Can't verify if a client ID is still valid
-- **Unclear lifecycle**: No guidance on when to re-register or update credentials
+- **额外开销**：管理注册状态和超出访问/刷新令牌的另一个秘密
+- **无有效性检查**：无法验证客户端 ID 是否仍然有效
+- **不明确的生命周期**：没有关于何时重新注册或更新凭据的指导
 
-### **Solution: Client ID Metadata Documents (CIMD)**
+### **解决方案：客户端 ID 元数据文档 (CIMD)**
 
-Client ID Metadata Documents (CIMD), described in [OAuth Client ID Metadata Document](https://www.ietf.org/archive/id/draft-parecki-oauth-client-id-metadata-document-03.html) and implemented by Bluesky, elegantly sidestep these operational issues.
+客户端 ID 元数据文档 (CIMD)，在 [OAuth 客户端 ID 元数据文档](https://www.ietf.org/archive/id/draft-parecki-oauth-client-id-metadata-document-03.html) 中描述并由 Bluesky 实现，优雅地避开了这些运营问题。
 
-Instead of a registration step, clients use an HTTPS metadata URL as their client ID directly. The server fetches the metadata from the URL at authorization time:
+客户端使用 HTTPS 元数据 URL 直接作为其客户端 ID，而不是注册步骤。服务器在授权时从 URL 获取元数据：
 
 ```mermaid
 sequenceDiagram
@@ -120,105 +120,105 @@ sequenceDiagram
    AuthServer->>Client: Show consent screen & continue flow
 ```
 
-This addresses all the operational issues:
+这解决了所有运营问题：
 
-- **No unbounded database growth**: Servers fetch metadata on-demand (can cache for performance)
-- **No expiry management**: The URL is the ID \- it doesn't expire
-- **Natural per-app model**: One URL per application, not per user
-- **No registration endpoint**: No unauthenticated write operations
+- **无不受限制的数据库增长**：服务器按需获取元数据（可以缓存以提高性能）
+- **无过期管理**：URL 就是 ID——它不会过期
+- **自然的每个应用模型**：每个应用程序一个 URL，而不是每个用户
+- **无注册端点**：无未经身份验证的写操作
 
-The cost? Clients need to host a metadata document at an HTTPS URL. For web applications, this is trivial. For desktop applications, this typically means hosting on their backend infrastructure.
+代价？客户端需要在 HTTPS URL 上托管元数据文档。对于 Web 应用程序，这很简单。对于桌面应用程序，这通常意味着在他们的后端基础设施上托管。
 
-## **Challenge 2: Client Identity and Impersonation**
+## **挑战 2：客户端身份和冒充**
 
-The second challenge is orthogonal to the DCR vs. CIMD debate \- it's about trusting that a client is who it claims to be. This problem will exist regardless of how the registration process is implemented.
+第二个挑战与 DCR 与 CIMD 的辩论正交——它是关于信任客户端是它声称的那个人。这个问题无论注册流程如何实现都会存在。
 
-For web-based clients, trust is more straightforward, as we have an HTTPS domain that's tied to a certificate authority. For desktop clients, if the client can't offload its authorization to existing backend infrastructure, there is difficulty trusting the client is legitimate and unmodified.
+对于基于 Web 的客户端，信任更直接，因为我们有一个与证书颁发机构绑定的 HTTPS 域。对于桌面客户端，如果客户端无法将其授权卸载到现有后端基础设施，则很难信任客户端是合法的且未修改的。
 
-### The Trust Spectrum
+### 信任谱
 
-We can map impersonation scenarios on two axes: attacker cost and mitigation complexity.
+我们可以在两个轴上映射冒充场景：攻击者成本和缓解复杂性。
 
-![Mitigation Cost vs Attack Cost](mitigation-attack-cost.png)
+![缓解成本 vs 攻击成本](mitigation-attack-cost.png)
 
-**Low attacker cost/Low mitigation complexity: Domain-based attacks**
+**低攻击者成本/低缓解复杂性：基于域的攻击**
 
-- **Attack**: Register malicious callback URI and claim to be `Claude Desktop`
-- **Cost**: Trick user into clicking a link and consenting
-- **Mitigation**:
-  - Restrict trusted domains/URLs
-  - Show warnings for unknown domains
-  - Works with both DCR and CIMD
+- **攻击**：注册恶意回调 URI 并声称是 `Claude Desktop`
+- **成本**：诱骗用户点击链接并同意
+- **缓解**：
+  - 限制受信任的域/URL
+  - 为未知域显示警告
+  - 与 DCR 和 CIMD 都兼容
 
-**Medium attacker cost/Medium mitigation complexity: `localhost` impersonation**
+**中等攻击者成本/中等缓解复杂性：`localhost` 冒充**
 
-- **Attack**: Run malicious app on `localhost:8080`, impersonate legitimate client
-- **Cost**: Trick user into running a malicious application (plus consenting for that app to have data access)
-- **Problem**: Desktop apps can't hold secrets, hard to prove identity
+- **攻击**：在 `localhost:8080` 上运行恶意应用，冒充合法客户端
+- **成本**：诱骗用户运行恶意应用程序（加上同意该应用访问数据）
+- **问题**：桌面应用无法持有秘密，难以证明身份
 
-**High attacker cost/High mitigation complexity: Platform-attested applications**
+**高攻击者成本/高缓解复杂性：平台证明应用程序**
 
-- **Attack**: Get malicious client signed by a trusted authority
-- **Cost**: Extremely high \- requires compromising certification vendor processes
-- **Mitigation**: platform system-level attestation (future work)
+- **攻击**：让恶意客户端由受信任的权威签名
+- **成本**：极高——需要破坏认证供应商流程
+- **缓解**：平台系统级证明（未来工作）
 
-### **Solution: Software Statements for Desktop Applications**
+### **解决方案：桌面应用程序的软件声明**
 
-To broadly solve the client impersonation for the middle tier as well as to prevent `localhost` impersonation we need signed software statements. Implementing this would require:
+为了广泛解决中等层的客户端冒充以及防止 `localhost` 冒充，我们需要签名的软件声明。实现这将需要：
 
-1. Client hosts a JSON Web Key Set (JWKS) on their backend
-2. Client authenticates the user through their own flow
-3. The client-owned backend service issues a short-lived, signed JWT attesting to the client's identity
-4. Client includes this JWT in the OAuth flow
-5. Authorization server verifies the JWT against the trusted JWKS
+1. 客户端在其后端托管 JSON Web Key Set (JWKS)
+2. 客户端通过自己的流程验证用户
+3. 客户端拥有的后端服务发出一个短期、有签名的 JWT，证明客户端的身份
+4. 客户端在 OAuth 流程中包含此 JWT
+5. 授权服务器根据受信任的 JWKS 验证 JWT
 
-This dramatically raises the bar for client impersonation, as an attacker would need to:
+这大大提高了客户端冒充的门槛，因为攻击者需要：
 
-- Compromise the client's backend infrastructure, or
-- Successfully impersonate the client's authentication flow
+- 破坏客户端的后端基础设施，或
+- 成功冒充客户端的认证流程
 
-Crucially, **software statements work with both DCR and CIMD**. They're not a competing solution \- they're a complementary security layer.
+至关重要的是，**软件声明与 DCR 和 CIMD 都兼容**。它们不是竞争解决方案——它们是互补的安全层。
 
-### **Future: Platform-Level Attestation**
+### **未来：平台级证明**
 
-The strongest protection would be platform-level attestation, e.g. having macOS, Windows, or Android attest that a piece of software is legitimate.
+最强的保护将是平台级证明，例如让 macOS、Windows 或 Android 证明一段软件是合法的。
 
-Having OS-level attestation would make client impersonation unreasonably expensive. While the exact way this ties into a software statement is yet to be prototyped, the general direction is threading platform-level application identity validation through to the OAuth flow.
+拥有操作系统级证明将使客户端冒充变得不合理昂贵。虽然确切的将这与软件声明结合的方式尚未原型化，但一般方向是通过 OAuth 流程线程平台级应用程序身份验证。
 
-## **The Complementary Path Forward**
+## **互补的前进道路**
 
-While we're looking at all available options, it's important to note that we're not choosing between solutions. We're exploring complementary approaches for distinct problems:
+虽然我们正在查看所有可用选项，但重要的是要注意我们不是在选择解决方案之间。我们正在探索针对不同问题的互补方法：
 
-**For operational issues**: We are looking at adding CIMD support in favor of DCR
+**对于运营问题**：我们正在考虑添加 CIMD 支持而不是 DCR
 
-- Keep DCR for backward compatibility
-- Recommend CIMD for new implementations
-- Both achieve the same authorization goal
+- 为向后兼容性保留 DCR
+- 为新实现推荐 CIMD
+- 两者都实现相同的授权目标
 
-**For trust issues**: Layering software statements on top
+**对于信任问题**：在上面分层软件声明
 
-- Optional enhancement for both DCR and CIMD
-- Required only when `localhost` impersonation is a concern
-- Authorization servers choose their required trust level
+- DCR 和 CIMD 的可选增强
+- 仅在 `localhost` 冒充是关注点时才需要
+- 授权服务器选择其所需的信任级别
 
-## **Security Considerations**
+## **安全考虑**
 
-Both CIMD and software statements require authorization servers to make outbound HTTPS requests, potentially to untrusted domains. Implementations must:
+CIMD 和软件声明都要求授权服务器向潜在不受信任的域发出出站 HTTPS 请求。实现必须：
 
-- Prevent SSRF attacks by blocking internal network access
-- Implement timeouts and size limits
-- Consider caching strategies for performance
-- Validate response formats strictly
+- 通过阻止内部网络访问来防止 SSRF 攻击
+- 实现超时和大小限制
+- 考虑缓存策略以提高性能
+- 严格验证响应格式
 
-If we adopt these approaches, we’ll need good best practices and SDK support to help avoid vulnerabilities and provide a easy path for implementors.
+如果我们采用这些方法，我们将需要良好的最佳实践和 SDK 支持，以帮助避免漏洞并为实现者提供易于使用的路径。
 
-## **Next Steps**
+## **下一步**
 
-Discussions for these approaches are happening in the [Specification Enhancement Proposals](https://modelcontextprotocol.io/community/sep-guidelines) (SEP):
+关于这些方法的讨论正在 [规范增强提案](https://modelcontextprotocol.io/community/sep-guidelines) (SEP) 中进行：
 
-- [SEP-991: Client ID Metadata Documents](https://github.com/modelcontextprotocol/specification/discussions/991)
-- [SEP-1032: Software Statements with DCR](https://github.com/modelcontextprotocol/specification/discussions/1032)
+- [SEP-991: 客户端 ID 元数据文档](https://github.com/modelcontextprotocol/specification/discussions/991)
+- [SEP-1032: 带 DCR 的软件声明](https://github.com/modelcontextprotocol/specification/discussions/1032)
 
-Get involved: Join the conversation in [Discord](https://discord.gg/6CSzBmMkjX) (the \#auth-wg-client-registration channel) or comment on the SEPs directly.
+参与其中：在 [Discord](https://discord.gg/6CSzBmMkjX)（\#auth-wg-client-registration 频道）中加入对话，或直接在 SEP 上发表评论。
 
-A big thank to the following folks for help with this blog post: Den Delimarsky, Aaron Parecki, Geoff Goodman, Andrew Block, Pieter Kasselman, Abhishek Hingnikar, and Bobby Tiernay.
+特别感谢以下人士帮助撰写这篇博客文章：Den Delimarsky、Aaron Parecki、Geoff Goodman、Andrew Block、Pieter Kasselman、Abhishek Hingnikar 和 Bobby Tiernay。
